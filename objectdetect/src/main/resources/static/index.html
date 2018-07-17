@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>物体检测</title>
+    <script>
+        var xmlhttp;
+        if (window.XMLHttpRequest)
+        {// code for IE7+, Firefox, Chrome, Opera, Safari
+            xmlhttp=new XMLHttpRequest();
+        }
+        else
+        {// code for IE6, IE5
+            xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+        }
+        xmlhttp.onreadystatechange=function()
+        {
+            if (xmlhttp.readyState==4 && xmlhttp.status==200)
+            {
+                document.getElementById("res").innerHTML="物体检测后的结果: "+xmlhttp.responseText;
+            }
+        }
+        xmlhttp.open("POST","http://localhost/service",true);
+        xmlhttp.setRequestHeader("Content-type","application/json");
+        xmlhttp.send('["images/test.jpg","images/test1.jpg"]');
+    </script>
+</head>
+<body>
+<p>正在执行下面的ajax请求,需要等待几秒</p>
+<pre>
+    <code>
+        xmlhttp.open("POST","http://localhost:8080/service",true);
+        xmlhttp.setRequestHeader("Content-type","application/json");
+        xmlhttp.send('["images/test.jpg","images/test1.jpg"]');
+    </code>
+</pre>
+<pre><code id="res">这里的信息等待被改变</code></pre>
+
+</body>
+</html>
