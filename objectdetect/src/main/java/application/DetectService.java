@@ -21,6 +21,7 @@ import java.awt.image.DataBufferByte;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -167,7 +168,8 @@ public class DetectService {
   }
 
   private static Tensor<UInt8> makeImageTensor(String filename) throws IOException {
-    BufferedImage img = ImageIO.read(new File(filename));
+//    BufferedImage img = ImageIO.read(new File(filename));//从文件路径读
+    BufferedImage img = ImageIO.read(new URL(filename));//从URL读
     if (img.getType() != BufferedImage.TYPE_3BYTE_BGR) {
       throw new IOException(
           String.format(
