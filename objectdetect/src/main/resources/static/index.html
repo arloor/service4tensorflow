@@ -20,7 +20,7 @@
                 document.getElementById("res").innerHTML="物体检测后的结果: "+xmlhttp.responseText;
             }
         }
-        xmlhttp.open("POST","http://localhost/service",true);
+        xmlhttp.open("POST","http://localhost:6700/service",true);
         xmlhttp.setRequestHeader("Content-type","application/json");
         xmlhttp.send('["http://jianbujingimages.moontell.cn/FrrkTtsITfXki44oJqk6i3IUzv2x","http://jianbujingimages.moontell.cn/FhD-asgS-HOuUssL1dVzmgkhD2v-"]');
     </script>
@@ -29,7 +29,7 @@
 <p>正在执行下面的ajax请求,需要等待几秒</p>
 <pre>
     <code>
-        xmlhttp.open("POST","http://localhost:8080/service",true);
+        xmlhttp.open("POST","http://localhost:6700/service",true);
         xmlhttp.setRequestHeader("Content-type","application/json");
         xmlhttp.send('["http://jianbujingimages.moontell.cn/FrrkTtsITfXki44oJqk6i3IUzv2x","http://jianbujingimages.moontell.cn/FhD-asgS-HOuUssL1dVzmgkhD2v-"]');
     </code>
