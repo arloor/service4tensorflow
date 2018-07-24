@@ -18,30 +18,27 @@
             if (xmlhttp.readyState==4 && xmlhttp.status==200)
             {
                 var result=eval('(' + xmlhttp.responseText + ')');
-                document.getElementById("res").innerHTML="物体检测后的结果: "+xmlhttp.responseText;
                 document.getElementById("result1").innerHTML=JSON.stringify(result[0].detectCells);
                 document.getElementById("result2").innerHTML=JSON.stringify(result[1].detectCells);
             }
         }
         xmlhttp.open("POST","http://localhost:8000/service",true);
         xmlhttp.setRequestHeader("Content-type","application/json");
-        xmlhttp.send('["http://jianbujingimages.moontell.cn/FrrkTtsITfXki44oJqk6i3IUzv2x","http://jianbujingimages.moontell.cn/FhD-asgS-HOuUssL1dVzmgkhD2v-"]');
+        xmlhttp.send('["http://localhost:8000/1.jpg","http://localhost:8000/2.jpg"]');
     </script>
 </head>
 <body>
-<p>请访问localhost:8000,若host不对，则有跨域错误</p>
-<p>正在执行下面的ajax请求,需要等待几秒</p>
+<p>正在执行下面的ajax请求,需要等待几秒？注意host和port是否正确</p>
 <pre>
     <code>
         xmlhttp.open("POST","http://localhost:8000/service",true);
         xmlhttp.setRequestHeader("Content-type","application/json");
-        xmlhttp.send('["http://jianbujingimages.moontell.cn/FrrkTtsITfXki44oJqk6i3IUzv2x","http://jianbujingimages.moontell.cn/FhD-asgS-HOuUssL1dVzmgkhD2v-"]');
+        xmlhttp.send('["http://localhost:8000/1.jpg","http://localhost:8000/2.jpg"]');
     </code>
 </pre>
-<pre><code id="res">这里的信息将会被改变</code></pre>
-<img src="http://jianbujingimages.moontell.cn/FrrkTtsITfXki44oJqk6i3IUzv2x" />
+<img style="width: auto;height: 300px" src="http://localhost:8000/1.jpg" />
 <p id="result1"></p>
-<img src="http://jianbujingimages.moontell.cn/FhD-asgS-HOuUssL1dVzmgkhD2v-"/>
+<img style="width: auto;height: 300px" src="http://localhost:8000/2.jpg"/>
 <p id="result2"></p>
 </body>
 </html>
