@@ -5,7 +5,6 @@
       <list>
         <option value="$PROJECT_DIR$/objectdetect/pom.xml" />
         <option value="$PROJECT_DIR$/eureka4tensorflow/pom.xml" />
-        <option value="$PROJECT_DIR$/imagelabel/pom.xml" />
       </list>
     </option>
   </component>

@@ -32,10 +32,13 @@ import java.util.Map;
 import javax.imageio.ImageIO;
 import javax.validation.Valid;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.tensorflow.SavedModelBundle;
 import org.tensorflow.Tensor;
+import org.tensorflow.TensorFlow;
 import org.tensorflow.framework.MetaGraphDef;
 import org.tensorflow.framework.SignatureDef;
 import org.tensorflow.framework.TensorInfo;
@@ -48,10 +51,34 @@ import org.tensorflow.types.UInt8;
 
 @Component
 public class DetectService {
+  private static Logger logger=LoggerFactory.getLogger(DetectService.class);
+
   @Value("${filepath.relative.model}")
   private String modelPath;
   @Value("${filepath.relative.labels}")
   private String labelsPath;
+
+  private SavedModelBundle model;
+
+  private String[] labels;
+
+  public void reload(){
+    logger.info("tensorflow api 版本： " + TensorFlow.version());
+    try {
+      logger.info("加载label from " + labelsPath);
+      labels = loadLabels(labelsPath);
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+    try {
+      logger.info("加载model from " + modelPath);
+      model = SavedModelBundle.load(modelPath, "serve");
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+
+  }
 
   public List<DetectResult> doService(List<String> imageURLs) throws Exception {
 
@@ -59,10 +86,15 @@ public class DetectService {
       printUsage(System.err);
     }
 
+    if(model==null||labels==null){
+      reload();
+    }
+
     List<DetectResult> detectResults=new LinkedList<>();
 
-    final String[] labels = loadLabels(labelsPath);
-    try (SavedModelBundle model = SavedModelBundle.load(modelPath, "serve")) {
+//    final String[] labels = loadLabels(labelsPath);
+//    try (SavedModelBundle model = SavedModelBundle.load(modelPath, "serve"))
+    {
       printSignature(model);
       for (int imgindex = 0; imgindex < imageURLs.size(); imgindex++) {
         DetectResult detectResult=new DetectResult();

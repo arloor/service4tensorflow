@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 //import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
+import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,12 +32,14 @@ public class DetectApplication {
     DetectService detectService;
 
     public static void main(String[] args) throws JsonProcessingException {
-        ArrayList<String> urls=new ArrayList<>();
-        urls.add("http://jianbujingimages.moontell.cn/FrrkTtsITfXki44oJqk6i3IUzv2x");
-        urls.add("http://jianbujingimages.moontell.cn/FhD-asgS-HOuUssL1dVzmgkhD2v-");
-        ObjectMapper mapper=new ObjectMapper();
+        ApplicationContext app=SpringApplication.run(DetectApplication.class,args);
+        //初始化DetectService的模型和标签
+        app.getBean(DetectService.class).reload();
 
-        SpringApplication.run(DetectApplication.class,args);
+        ArrayList<String> urls=new ArrayList<>();
+        urls.add("http://localhost:8000/1.jpg");
+        urls.add("http://localhost:8000/2.jpg");
+        ObjectMapper mapper=new ObjectMapper();
         logger.info("请求体例子: "+mapper.writeValueAsString(urls));;
     }
 

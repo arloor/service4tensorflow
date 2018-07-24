@@ -4,7 +4,6 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/eureka4tensorflow/eureka4tensorflow.iml" filepath="$PROJECT_DIR$/eureka4tensorflow/eureka4tensorflow.iml" />
       <module fileurl="file://$PROJECT_DIR$/gateway_zuul/gateway_zuul.iml" filepath="$PROJECT_DIR$/gateway_zuul/gateway_zuul.iml" />
-      <module fileurl="file://$PROJECT_DIR$/imagelabel/imagelabel.iml" filepath="$PROJECT_DIR$/imagelabel/imagelabel.iml" />
       <module fileurl="file://$PROJECT_DIR$/objectdetect/objectdetect.iml" filepath="$PROJECT_DIR$/objectdetect/objectdetect.iml" />
     </modules>
   </component>

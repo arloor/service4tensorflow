@@ -38,10 +38,10 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.9.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.9.6" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.9.6" level="project" />
-    <orderEntry type="library" name="Maven: org.tensorflow:tensorflow:1.4.0" level="project" />
-    <orderEntry type="library" name="Maven: org.tensorflow:libtensorflow:1.4.0" level="project" />
-    <orderEntry type="library" name="Maven: org.tensorflow:libtensorflow_jni:1.4.0" level="project" />
-    <orderEntry type="library" name="Maven: org.tensorflow:proto:1.4.0" level="project" />
+    <orderEntry type="library" name="Maven: org.tensorflow:tensorflow:1.8.0" level="project" />
+    <orderEntry type="library" name="Maven: org.tensorflow:libtensorflow:1.8.0" level="project" />
+    <orderEntry type="library" name="Maven: org.tensorflow:libtensorflow_jni:1.8.0" level="project" />
+    <orderEntry type="library" name="Maven: org.tensorflow:proto:1.8.0" level="project" />
     <orderEntry type="library" name="Maven: com.google.protobuf:protobuf-java:3.3.1" level="project" />
     <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot-starter-web:2.0.3.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot-starter:2.0.3.RELEASE" level="project" />
