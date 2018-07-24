@@ -6,10 +6,15 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="gateway_zuul" />
+        <module name="imagelabel" />
         <module name="objectdetect" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="eureka4tensorflow" target="1.8" />
+      <module name="gateway_zuul" target="1.8" />
+      <module name="imagelabel" target="1.8" />
       <module name="objectdetect" target="1.8" />
     </bytecodeTargetLevel>
   </component>

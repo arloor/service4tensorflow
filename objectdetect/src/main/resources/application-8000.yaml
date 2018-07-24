@@ -1,0 +1,16 @@
+filepath:
+  relative:
+    model:
+      tensor_model/objectdetect/models/ssd_inception_v2_coco_2017_11_17/saved_model
+    labels:
+      tensor_model/objectdetect/labels/mscoco_label_map.pbtxt
+
+spring:
+  application:
+    name: objectdetect
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:7000/eureka/,http://peer1:7001/eureka/,http://peer2:7002/eureka/
+server:
+  port: 8000
