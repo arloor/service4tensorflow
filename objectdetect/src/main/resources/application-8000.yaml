@@ -26,6 +26,13 @@ filepath:
 spring:
   application:
     name: objectdetect
+  rabbitmq:
+    host: mysql.moontell.cn
+    port: 5672
+    username: arloor
+    password: arloor
+    virtual-host: /
+    publisher-confirms: true
 eureka:
   client:
     service-url:
