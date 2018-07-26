@@ -28,10 +28,10 @@ spring:
   application:
     name: objectdetect
   rabbitmq:
-    host: mysql.moontell.cn
+    host: localhost
     port: 5672
-    username: arloor
-    password: arloor
+    username: guest
+    password: guest
     virtual-host: /
     publisher-confirms: true
 eureka:
