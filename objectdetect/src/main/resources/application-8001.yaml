@@ -1,3 +1,21 @@
+logging:
+  file: obdetect_log.txt
+
+management:
+  endpoint:
+    shutdown:
+      enabled:
+        true
+  endpoints:
+    web:
+      exposure:
+        include:
+          '*'
+      cors:
+        allowed-origins:
+          https://api.moontell.cn/
+        allowed-methods:
+          GET,POST
 filepath:
   relative:
     model:

@@ -2,8 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>物体检测</title>
-    <script>
+    <title>Moontell服务网关</title>
+</head>
+<body>
+<p><a href="./testobjectdetect.html">测试物体检测接口</a></p>
+<button onclick=shutdown_obdetect()>退出物体探测服务</button>
+</body>
+<script>
+
+    function shutdown_obdetect() {
         var xmlhttp;
         if (window.XMLHttpRequest)
         {// code for IE7+, Firefox, Chrome, Opera, Safari
@@ -18,21 +25,11 @@
             if (xmlhttp.readyState==4 && xmlhttp.status==200)
             {
                 var result=eval('(' + xmlhttp.responseText + ')');
-                document.getElementById("result1").innerHTML=JSON.stringify(result[0].detectCells);
-                document.getElementById("result2").innerHTML=JSON.stringify(result[1].detectCells);
+                alert(result.message);
             }
         }
-        xmlhttp.open("POST","http://localhost/objectdetect/service",true);
-        xmlhttp.setRequestHeader("Content-type","application/json");
-        xmlhttp.send('["http://localhost/1.jpg","http://localhost/2.jpg"]');
-    </script>
-</head>
-<body>
-<p>正在执行ajax请求物体检测接口,需要等待几秒。F12看一下host和port是否正确</p>
-
-<img style="width: auto;height: 300px" src="http://localhost/1.jpg" />
-<p id="result1"></p>
-<img style="width: auto;height: 300px" src="http://localhost/2.jpg"/>
-<p id="result2"></p>
-</body>
+        xmlhttp.open("POST","https://api.moontell.cn/objectdetect/actuator/shutdown",true);
+        xmlhttp.send();
+    }
+</script>
 </html>

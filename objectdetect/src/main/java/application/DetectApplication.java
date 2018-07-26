@@ -48,9 +48,4 @@ public class DetectApplication {
         return detectService.doService(ImageURLs);
     }
 
-    @RequestMapping("/hi")
-    public String hi(){
-        return "greeting from "+ port+"\r\n";
-    }
-
 }

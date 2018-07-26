@@ -6,11 +6,7 @@
 
     <groupId>com.arloor</groupId>
     <artifactId>eureka4tensorflow</artifactId>
-    <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
-    <modules>
-        <module>../gateway_zuul</module>
-    </modules>
 
     <parent>
         <groupId>org.springframework.boot</groupId>

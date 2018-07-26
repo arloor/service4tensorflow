@@ -22,7 +22,7 @@
                 document.getElementById("result2").innerHTML=JSON.stringify(result[1].detectCells);
             }
         }
-        xmlhttp.open("POST","http://api.moontell.cn:8000/service",true);
+        xmlhttp.open("POST","https://api.moontell.cn/objectdetect/service",true);
         xmlhttp.setRequestHeader("Content-type","application/json");
         xmlhttp.send('["http://api.moontell.cn:8000/1.jpg","http://api.moontell.cn:8000/2.jpg"]');
     </script>
@@ -30,9 +30,9 @@
 <body>
 <p>正在执行ajax请求物体检测接口,需要等待几秒。F12看一下host和port是否正确</p>
 
-<img style="width: auto;height: 300px" src="http://api.moontell.cn:8000/1.jpg" />
+<img style="width: auto;height: 300px" src="https://api.moontell.cn/1.jpg" />
 <p id="result1"></p>
-<img style="width: auto;height: 300px" src="http://api.moontell.cn:8000/2.jpg"/>
+<img style="width: auto;height: 300px" src="https://api.moontell.cn/2.jpg"/>
 <p id="result2"></p>
 </body>
 </html>

@@ -11,3 +11,5 @@ eureka:
     fetch-registry: true
     service-url:
       defaultZone: http://peer0:7000/eureka/,http://peer2:7002/eureka/
+logging:
+  file: eureka_log.txt

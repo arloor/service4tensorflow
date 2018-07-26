@@ -1,8 +1,16 @@
+logging:
+  file: zuul_log.txt
+server:
+  port: 443
+  ssl:
+    key-store: classpath:api.moontell.cn.jks
+    key-store-password: 123456
+    keyStoreType: JKS
+    keyAlias: api.moontell.cn
+
 spring:
   application:
     name: gateway_zuul
-server:
-  port: 80
 eureka:
   client:
     service-url:
