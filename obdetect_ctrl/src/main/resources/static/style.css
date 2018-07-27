@@ -1,0 +1,51 @@
+body{
+    display: flex;
+    display: -webkit-flex;
+    flex-flow: column;
+    align-items: center;
+}
+
+.panel{
+    margin: 20px;
+    padding: 20px;
+    border: 1px solid #999;
+}
+
+.model_info input{
+    font-size: 30px;
+}
+
+.model_info{
+    font-size: 30px;
+
+}
+
+#header{
+    margin: 15px;
+}
+
+.input button{
+    font-size: 20px;
+    border-radius: 10px;
+}
+
+.panel_input button{
+    font-size: 20px;
+    border-radius: 8px;
+    margin-left: 10px;
+}
+
+.panel_input{
+    display: flex;
+    display: -webkit-flex;
+    justify-content: flex-end;
+    -webkit-justify-content: flex-end;
+}
+
+.panel table{
+    font-size: 25px;
+}
+
+.panel td{
+    padding: 5px 10px;
+}

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <link href="style.css"  rel="stylesheet" type="text/css">
+
+    <!-- 开发环境版本，包含了有帮助的命令行警告 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+<body>
+<!--<div id="app">-->
+    <!--{{ message }}-->
+<!--</div>-->
+
+<!--<div id="app-2">-->
+  <!--<span v-bind:title="message">-->
+    <!--鼠标悬停几秒钟查看此处动态绑定的提示信息！-->
+  <!--</span>-->
+<!--</div>-->
+
+
+<div id="header">
+    <div class="model_info" style="display: inline">
+        <label>模型地址</label>
+        <input type="text" placeholder="请输入模型的地址" value="">
+    </div>
+</div>
+
+<div id="button_area">
+    <div class="input" >
+        <button>更新所有模型</button>
+        <button>报告所有状态</button>
+        <button>刷新所有状态</button>
+    </div>
+</div>
+
+<div class="panel_area">
+
+    <div class="panel">
+        <h2>ob-laptop-192.168.43.73-8000</h2>
+        <table>
+            <tr>
+                <td>model地址</td>
+                <td>http://dasdas.com/....</td>
+            </tr>
+            <tr>
+                <td>最后更新时间</td>
+                <td>2018-07-20 10:08:00</td>
+            </tr>
+            <tr>
+                <td>最后通信</td>
+                <td>通信信息</td>
+            </tr>
+        </table>
+        <div class="panel_input" >
+            <button>更新模型</button>
+            <button>立即刷新状态</button>
+        </div>
+    </div>
+</div>
+
+</body>
+
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            message: 'Hello Vue!'
+        }
+    })
+    var app2 = new Vue({
+        el: '#app-2',
+        data: {
+            message: '页面加载于 ' + new Date().toLocaleString()
+        }
+    })
+</script>
+</html>

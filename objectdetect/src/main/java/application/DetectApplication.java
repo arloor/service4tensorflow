@@ -1,24 +1,22 @@
 package application;
 
+import application.model.DetectResult;
+import application.rabbitmq.RabbitmqHelper;
+import application.service.DetectService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.eureka.EnableEurekaClient;
 import org.springframework.context.ApplicationContext;
-
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,26 +29,15 @@ public class DetectApplication {
     @Value("${server.port}")
     int port;
 
-    @Autowired
-    RabbitmqHelper rabbitmqHelper;
-
-    @RequestMapping("/send")
-    public String send(@RequestParam String content){
-        rabbitmqHelper.send(content);
-        return "通知消息 "+content+" 发送成功";
-    }
-
-    @RequestMapping("/register")
-    public String register(){
-        rabbitmqHelper.send("register");
-        return "注册信息 "+rabbitmqHelper.QUEUE_NAME+" 发送成功";
-    }
-
-
     private static Logger logger = LoggerFactory.getLogger(DetectApplication.class);
 
-    @Autowired
-    DetectService detectService;
+
+
+
+
+
+
+
 
     public static void main(String[] args) throws JsonProcessingException {
         ApplicationContext app = SpringApplication.run(DetectApplication.class, args);
@@ -64,10 +51,7 @@ public class DetectApplication {
         logger.info("请求体例子: " + mapper.writeValueAsString(urls));
     }
 
-    @RequestMapping("/service")
-    public List<DetectResult> service(@RequestBody List<String> ImageURLs) throws Exception {
-        return detectService.doService(ImageURLs);
-    }
+
 
 
 }

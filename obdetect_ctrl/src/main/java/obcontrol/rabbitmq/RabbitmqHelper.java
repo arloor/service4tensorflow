@@ -1,6 +1,8 @@
-package obcontrol;
+package obcontrol.rabbitmq;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
+import obcontrol.model.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.*;
@@ -10,14 +12,13 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.support.CorrelationData;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.io.IOException;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
@@ -41,8 +42,13 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
 
     private RabbitTemplate rabbitTemplate;
 
+    Map<String,Status> nodeStatusMap=new ConcurrentHashMap<>();
 
+    ObjectMapper ow=new ObjectMapper();
 
+    public Map<String, Status> getNodeStatusMap() {
+        return nodeStatusMap;
+    }
 
 
     @Autowired
@@ -109,6 +115,21 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
 
             private void processMeg(String queueName, String msg) {
                 //todo
+
+                //如果为报告状态
+                if(msg.startsWith("status")){
+                    String statusJson=msg.substring(msg.indexOf("::")+2);
+                    try {
+                        statusJson=statusJson.replaceAll("'","\"");
+                        statusJson=statusJson.replaceAll("null","\"\"");
+                        Status status=ow.readValue(statusJson,Status.class);
+                        //使用map保存状态
+                        nodeStatusMap.put(queueName,status);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
             }
         });
         return container;
@@ -125,9 +146,9 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
     @Override
     public void confirm(CorrelationData correlationData, boolean ack, String cause) {
         if (ack) {
-            logger.info(" 消息消费成功 id:" + correlationData);
+            logger.info("——消息消费成功 id:" + correlationData);
         } else {
-            logger.info(" 消息消费失败 id:" + correlationData);
+            logger.info("——消息消费失败 id:" + correlationData);
         }
     }
 }

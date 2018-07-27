@@ -1,4 +1,4 @@
-package application;
+package application.model;
 
 import java.util.LinkedList;
 import java.util.List;

@@ -1,5 +1,10 @@
-package application;
+package application.rabbitmq;
 
+import application.model.Status;
+import application.service.DetectService;
+import application.utils.Utils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rabbitmq.client.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,11 +15,11 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.support.CorrelationData;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
+import javax.rmi.CORBA.Util;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.UUID;
@@ -24,16 +29,17 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
 
     private final Logger logger=LoggerFactory.getLogger(RabbitmqHelper.class);
 
+    @Autowired
+    DetectService detectService;
 
-    private final AmqpAdmin amqpAdmin;
-
+    private String lastMegTime;
+    private String lastMsg;
 
     private String host;
     private String IP;
-
     @Value("${server.port}")
     String port;
-
+    private final AmqpAdmin amqpAdmin;
     private ConnectionFactory connectionFactory;
 
     private static String FAOUT_EXCHANGE="ob-ctrl-faout";
@@ -47,7 +53,7 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
 
     private RabbitTemplate rabbitTemplate;
 
-
+    ObjectMapper ow=new ObjectMapper();
 
 
 
@@ -124,6 +130,23 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
 
             private void processMeg(String queueName, String msg) {
                 //todo
+
+                //msg= "ob-"+host+"-"+IP+"-"+port+"::"+order
+                if(msg.startsWith("QUEUE_NAME")||msg.startsWith("all")){
+                    String order=msg.substring(msg.indexOf("::")+2);
+                    if(order.equals("status")){
+                        //获取本身状态，发送
+                        Status status=detectService.staus(staus(new Status()));
+                        try {
+                            String tosendMsg=ow.writeValueAsString(status);
+                            tosendMsg=tosendMsg.replaceAll("\"","'");
+                            System.out.println(tosendMsg);
+                            send("status::"+tosendMsg);
+                        } catch (JsonProcessingException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
             }
         });
         return container;
@@ -133,7 +156,8 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
         CorrelationData ID=new CorrelationData(UUID.randomUUID().toString());
         rabbitTemplate.convertAndSend(DIRECT_EXCHANGE,"ob",QUEUE_NAME+"::"+msg,ID);
         logger.info("发送消息:  "+msg +"，ID为： "+ID);
-
+        lastMegTime= Utils.getFormedDate();
+        lastMsg=msg;
         }
     /**
      * 回调
@@ -145,5 +169,13 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
         } else {
             logger.info(" 消息消费失败 id:" + correlationData);
         }
+    }
+
+    public Status staus(Status status){
+        status.setIP(IP);
+        status.setPort(port);
+        status.setNodeName(QUEUE_NAME);
+        status.setLastMegTime(this.lastMegTime);
+        return status;
     }
 }
