@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
+import javax.rmi.CORBA.Util;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.UUID;
@@ -136,6 +137,7 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
                     if(order.equals("status")){
                         //获取本身状态，发送
                         Status status=detectService.staus(staus(new Status()));
+                        status.setLastMsgTime(Utils.getFormedDate());
                         try {
                             String tosendMsg=ow.writeValueAsString(status);
                             tosendMsg=tosendMsg.replaceAll("\"","'");
