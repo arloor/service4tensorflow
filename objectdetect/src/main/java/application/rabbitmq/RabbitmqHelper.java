@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
-import javax.rmi.CORBA.Util;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.UUID;
@@ -132,7 +131,7 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
                 //todo
 
                 //msg= "ob-"+host+"-"+IP+"-"+port+"::"+order
-                if(msg.startsWith("QUEUE_NAME")||msg.startsWith("all")){
+                if(msg.startsWith(QUEUE_NAME)||msg.startsWith("all")){
                     String order=msg.substring(msg.indexOf("::")+2);
                     if(order.equals("status")){
                         //获取本身状态，发送
@@ -175,7 +174,7 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
         status.setIP(IP);
         status.setPort(port);
         status.setNodeName(QUEUE_NAME);
-        status.setLastMegTime(this.lastMegTime);
+        status.setLastMsgTime(this.lastMegTime);
         return status;
     }
 }

@@ -6,7 +6,7 @@ public class Status {
     private String port="";
     private String modelURL="";
     private String updateTime="";
-    private String lastMegTime="";
+    private String lastMsgTime ="";
 
 
     public String getIP() {
@@ -49,12 +49,12 @@ public class Status {
         this.updateTime = updateTime;
     }
 
-    public String getLastMegTime() {
-        return lastMegTime;
+    public String getLastMsgTime() {
+        return lastMsgTime;
     }
 
-    public void setLastMegTime(String lastMegTime) {
-        this.lastMegTime = lastMegTime;
+    public void setLastMsgTime(String lastMsgTime) {
+        this.lastMsgTime = lastMsgTime;
     }
 
 
