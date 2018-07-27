@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: ob_ctrl
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /objectdetect
+    publisher-confirms: true
+
+server:
+  port: 9000
+logging:
+  file: ob_detect.txt

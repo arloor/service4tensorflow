@@ -1,4 +1,4 @@
-package application;
+package obcontrol;
 
 import com.rabbitmq.client.Channel;
 import org.slf4j.Logger;
@@ -24,25 +24,19 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
 
     private final Logger logger=LoggerFactory.getLogger(RabbitmqHelper.class);
 
-
     private final AmqpAdmin amqpAdmin;
 
-
-    private String host;
-    private String IP;
-
-    @Value("${server.port}")
-    String port;
 
     private ConnectionFactory connectionFactory;
 
     private static String FAOUT_EXCHANGE="ob-ctrl-faout";
 
+
+    public final static String QUEUE_NAME="ob-ctrl";
+
     private static String DIRECT_EXCHANGE="spring-boot-direct-key-ob";
 
-    private static String ROUTINGKEY="ob";
-
-    public static String QUEUE_NAME;
+    private static String DIRECT_KEY="ob";
 
 
     private RabbitTemplate rabbitTemplate;
@@ -53,14 +47,6 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
 
     @Autowired
     public RabbitmqHelper(AmqpAdmin amqpAdmin, RabbitTemplate rabbitTemplate,ConnectionFactory connectionFactory) {
-        try {
-            InetAddress ia = InetAddress.getLocalHost();
-            this.host = ia.getHostName();//获取计算机主机名
-            this.IP= ia.getHostAddress();//获取计算机IP
-
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
 
         this.amqpAdmin = amqpAdmin;
         this.rabbitTemplate = rabbitTemplate;
@@ -75,10 +61,11 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
      DirectExchange:按照routingkey分发到指定队列
      TopicExchange:多关键字匹配
      */
-//    @Bean
-//    public DirectExchange directExchange() {
-//        return new DirectExchange(DIRECT_EXCHANGE);
-//    }
+    @Bean
+    public DirectExchange directExchange() {
+        return new DirectExchange(DIRECT_EXCHANGE);
+    }
+
 
     @Bean
     public FanoutExchange fanoutExchange() {
@@ -89,15 +76,13 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
 
     @Bean
     public Queue queue() {
-        QUEUE_NAME="ob-"+host+"-"+IP+"-"+port;
         return new Queue(QUEUE_NAME, true); //队列持久
 
     }
 
     @Bean
     public Binding binding() {
-        logger.info("binding 订阅FAOUT_EXCHANGE");
-        return BindingBuilder.bind(queue()).to(fanoutExchange());
+        return BindingBuilder.bind(queue()).to(directExchange()).with(DIRECT_KEY);
     }
 
     @Bean
@@ -131,10 +116,9 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
 
     public void send(String msg){
         CorrelationData ID=new CorrelationData(UUID.randomUUID().toString());
-        rabbitTemplate.convertAndSend(DIRECT_EXCHANGE,"ob",QUEUE_NAME+"::"+msg,ID);
+        rabbitTemplate.convertAndSend(FAOUT_EXCHANGE,"ob",QUEUE_NAME+"::"+msg,ID);
         logger.info("发送消息:  "+msg +"，ID为： "+ID);
-
-        }
+    }
     /**
      * 回调
      */

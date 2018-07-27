@@ -8,6 +8,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="eureka4tensorflow" />
         <module name="gateway_zuul" />
+        <module name="obdetect_ctrl" />
         <module name="objectdetect" />
       </profile>
     </annotationProcessing>
@@ -15,6 +16,7 @@
       <module name="eureka4tensorflow" target="1.8" />
       <module name="gateway_zuul" target="1.8" />
       <module name="imagelabel" target="1.8" />
+      <module name="obdetect_ctrl" target="1.8" />
       <module name="objectdetect" target="1.8" />
     </bytecodeTargetLevel>
   </component>

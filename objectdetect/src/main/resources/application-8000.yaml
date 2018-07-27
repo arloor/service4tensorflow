@@ -31,7 +31,7 @@ spring:
     port: 5672
     username: guest
     password: guest
-    virtual-host: /
+    virtual-host: /objectdetect
     publisher-confirms: true
 eureka:
   client:

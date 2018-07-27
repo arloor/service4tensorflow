@@ -3,8 +3,7 @@
   <component name="Encoding">
     <file url="file://$PROJECT_DIR$/eureka4tensorflow" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/gateway_zuul" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/imagelabel" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/objectdetect" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/obdetect_ctrl" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/objectdetect" charset="UTF-8" />
   </component>
 </project>

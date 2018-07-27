@@ -3,9 +3,10 @@
   <component name="MavenProjectsManager">
     <option name="originalFiles">
       <list>
-        <option value="$PROJECT_DIR$/objectdetect/pom.xml" />
         <option value="$PROJECT_DIR$/eureka4tensorflow/pom.xml" />
         <option value="$PROJECT_DIR$/gateway_zuul/pom.xml" />
+        <option value="$PROJECT_DIR$/obdetect_ctrl/pom.xml" />
+        <option value="$PROJECT_DIR$/objectdetect/pom.xml" />
       </list>
     </option>
   </component>

@@ -37,7 +37,13 @@ public class DetectApplication {
     @RequestMapping("/send")
     public String send(@RequestParam String content){
         rabbitmqHelper.send(content);
-        return "正在发送";
+        return "通知消息 "+content+" 发送成功";
+    }
+
+    @RequestMapping("/register")
+    public String register(){
+        rabbitmqHelper.send("register");
+        return "注册信息 "+rabbitmqHelper.QUEUE_NAME+" 发送成功";
     }
 
 
