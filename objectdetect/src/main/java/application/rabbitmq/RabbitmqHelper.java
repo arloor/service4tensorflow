@@ -139,7 +139,6 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
                         try {
                             String tosendMsg=ow.writeValueAsString(status);
                             tosendMsg=tosendMsg.replaceAll("\"","'");
-                            System.out.println(tosendMsg);
                             send("status::"+tosendMsg);
                         } catch (JsonProcessingException e) {
                             e.printStackTrace();
