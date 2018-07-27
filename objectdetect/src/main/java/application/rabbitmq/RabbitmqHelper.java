@@ -164,9 +164,9 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
     @Override
     public void confirm(CorrelationData correlationData, boolean ack, String cause) {
         if (ack) {
-            logger.info(" 消息消费成功 id:" + correlationData);
+            logger.info("——消息消费成功 id:" + correlationData);
         } else {
-            logger.info(" 消息消费失败 id:" + correlationData);
+            logger.info("——消息消费失败 id:" + correlationData);
         }
     }
 
