@@ -66,3 +66,44 @@ body{
     padding: 5px 10px;
     width: 50%;
 }
+
+.panel_area{
+    display: flex;
+    display: -webkit-flex;
+    flex-flow: column;
+    justify-content: center;
+    -webkit-justify-content: center;
+    align-items: center;
+    -webkit-align-items: center;
+}
+
+.article_block{
+    display: flex;
+    display: -webkit-flex;
+    flex-flow: column;
+    justify-content: center;
+    -webkit-justify-content: center;
+    align-items: center;
+    -webkit-align-items: center;
+    width: 900px;
+    word-wrap:break-word;
+
+}
+
+.article_block img{
+    width: 900px;
+    height: 100%;
+    align-content: center;
+}
+
+h1{
+    text-align: center;
+}
+
+h2{
+    text-align: center;
+}
+
+h3{
+    text-align: center;
+}

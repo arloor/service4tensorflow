@@ -33,7 +33,6 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
     DetectService detectService;
 
     private String lastMegTime;
-    private String lastMsg;
 
     private String host;
     private String IP;
@@ -88,6 +87,7 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
 
     @Bean
     public FanoutExchange fanoutExchange() {
+        logger.info("注册Exchange");
         return new FanoutExchange(FAOUT_EXCHANGE);
     }
 
@@ -96,6 +96,7 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
     @Bean
     public Queue queue() {
         QUEUE_NAME="ob-"+host+"-"+IP+"-"+port;
+        logger.info("注册 queue： "+QUEUE_NAME);
         return new Queue(QUEUE_NAME, true); //队列持久
 
     }
@@ -154,10 +155,9 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
 
     public void send(String msg){
         CorrelationData ID=new CorrelationData(UUID.randomUUID().toString());
-        rabbitTemplate.convertAndSend(DIRECT_EXCHANGE,"ob",QUEUE_NAME+"::"+msg,ID);
+        rabbitTemplate.convertAndSend(DIRECT_EXCHANGE,ROUTINGKEY,QUEUE_NAME+"::"+msg,ID);
         logger.info("发送消息:  "+msg +"，ID为： "+ID);
         lastMegTime= Utils.getFormedDate();
-        lastMsg=msg;
         }
     /**
      * 回调
