@@ -4,20 +4,20 @@
     <meta charset="UTF-8">
     <title>Title</title>
 
-    <link href="style.css"  rel="stylesheet" type="text/css">
+    <link href="style.css" rel="stylesheet" type="text/css">
 
     <!-- 开发环境版本，包含了有帮助的命令行警告 -->
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 </head>
 <body>
 <!--<div id="app">-->
-    <!--{{ message }}-->
+<!--{{ message }}-->
 <!--</div>-->
 
 <!--<div id="app-2">-->
-  <!--<span v-bind:title="message">-->
-    <!--鼠标悬停几秒钟查看此处动态绑定的提示信息！-->
-  <!--</span>-->
+<!--<span v-bind:title="message">-->
+<!--鼠标悬停几秒钟查看此处动态绑定的提示信息！-->
+<!--</span>-->
 <!--</div>-->
 
 
@@ -29,53 +29,122 @@
 </div>
 
 <div id="button_area">
-    <div class="input" >
+    <div class="input">
         <button>更新所有模型</button>
-        <button>报告所有状态</button>
-        <button>刷新所有状态</button>
+        <button onclick="for_all_status()">刷新所有节点</button>
+        <button onclick="get_all_status()">显示最新状态</button>
     </div>
 </div>
 
-<div class="panel_area">
+<div class="panel_area" id="panel_area">
 
-    <div class="panel">
-        <h2>ob-laptop-192.168.43.73-8000</h2>
-        <table>
+    <div class="panel" v-for="node in nodes">
+        <table width="900px">
             <tr>
-                <td>model地址</td>
-                <td>http://dasdas.com/....</td>
+                <td width="200px">节点名</td>
+                <td width="700px">
+                    <div style="width: 500px;word-wrap:break-word">{{ node.nodeName }}</div>
+                </td>
             </tr>
             <tr>
-                <td>最后更新时间</td>
-                <td>2018-07-20 10:08:00</td>
+                <td width="200px">model地址</td>
+                <td class="url" width="700px">
+                    <div style="width: 700px;word-wrap:break-word">{{ node.modelURL }}</div>
+                </td>
             </tr>
             <tr>
-                <td>最后通信</td>
-                <td>通信信息</td>
+                <td width="200px">最后更新时间</td>
+                <td width="700px">{{ node.updateTime }}</td>
+            </tr>
+            <tr>
+                <td width="200px">最后通信时间</td>
+                <td width="700px">{{ node.lastMsgTime }}</td>
+            </tr>
+            <tr v-if="node.expired">
+                <td width="200px" style="color: #9900CC">过期请刷新</td>
+                <td width="700px">
+                    <div class="td_button_block">
+                        <button v-on:click="for_single_status(node.nodeName)">刷新节点状态</button>
+                        <button onclick="get_all_status()">显示最新状态</button>
+                        <button v-on:click="delete_single_status(node.nodeName)">确认宕机 删除监测信息</button>
+                    </div>
+                </td>
             </tr>
         </table>
-        <div class="panel_input" >
-            <button>更新模型</button>
-            <button>报告状态</button>
-            <button>刷新状态</button>
+        <div class="panel_input">
+            <button>更新节点模型</button>
         </div>
     </div>
+
+
 </div>
 
 </body>
 
 <script>
-    var app = new Vue({
-        el: '#app',
+
+
+    var panel_area = new Vue({
+        el: '#panel_area',
         data: {
-            message: 'Hello Vue!'
+            nodes: []
+        },
+        methods: {
+            for_single_status: function (nodeName) {
+                var xmlhttp= new XMLHttpRequest();;
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                        alert(xmlhttp.responseText);
+                    }
+                }
+                xmlhttp.open("GET", "http://localhost:9000/for_single_status?nodeName="+nodeName, true);
+                xmlhttp.setRequestHeader("Content-type", "application/json");
+                xmlhttp.send();
+            },
+            delete_single_status:function (nodeName) {
+                var xmlhttp= new XMLHttpRequest();;
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                        var result = eval('(' + xmlhttp.responseText + ')');
+                        panel_area.nodes = result;
+                        alert("删除监测信息成功")
+                    }
+                }
+                xmlhttp.open("GET", "http://localhost:9000/delete_single_status?nodeName="+nodeName, true);
+                xmlhttp.setRequestHeader("Content-type", "application/json");
+                xmlhttp.send();
+            }
         }
     })
-    var app2 = new Vue({
-        el: '#app-2',
-        data: {
-            message: '页面加载于 ' + new Date().toLocaleString()
+
+    function for_all_status() {
+        var xmlhttp= new XMLHttpRequest();;
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                alert(xmlhttp.responseText);
+            }
         }
-    })
+        xmlhttp.open("GET", "http://localhost:9000/for_all_status", true);
+        xmlhttp.setRequestHeader("Content-type", "application/json");
+        xmlhttp.send();
+    }
+
+    function get_all_status() {
+        var xmlhttp= new XMLHttpRequest();
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                var result = eval('(' + xmlhttp.responseText + ')');
+                panel_area.nodes = result;
+
+            }
+        }
+        xmlhttp.open("GET", "http://localhost:9000/get_all_status", true);
+        xmlhttp.setRequestHeader("Content-type", "application/json");
+        xmlhttp.send();
+    }
+
+    window.onload = function (ev) {
+        get_all_status()
+    }
 </script>
 </html>

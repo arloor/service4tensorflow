@@ -31,14 +31,6 @@ public class DetectApplication {
 
     private static Logger logger = LoggerFactory.getLogger(DetectApplication.class);
 
-
-
-
-
-
-
-
-
     public static void main(String[] args) throws JsonProcessingException {
         ApplicationContext app = SpringApplication.run(DetectApplication.class, args);
         //初始化DetectService的模型和标签

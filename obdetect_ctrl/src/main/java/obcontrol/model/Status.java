@@ -7,7 +7,15 @@ public class Status {
     private String modelURL="";
     private String updateTime="";
     private String lastMsgTime ="";
+    private boolean expired=false;
 
+    public boolean isExpired() {
+        return expired;
+    }
+
+    public void setExpired(boolean expired) {
+        this.expired = expired;
+    }
 
     public String getIP() {
         return IP;

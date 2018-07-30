@@ -151,4 +151,9 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
             logger.info("——消息消费失败 id:" + correlationData);
         }
     }
+
+    public Map<String,Status> deleteNodeInfo(String nodeName){
+         nodeStatusMap.remove(nodeName);
+        return nodeStatusMap;
+    }
 }

@@ -9,6 +9,7 @@ body{
     margin: 20px;
     padding: 20px;
     border: 1px solid #999;
+
 }
 
 .model_info input{
@@ -42,10 +43,26 @@ body{
     -webkit-justify-content: flex-end;
 }
 
+.td_button_block{
+    display: flex;
+    display: -webkit-flex;
+    justify-content: flex-start;
+    -webkit-justify-content: flex-start;
+
+}
+
+.td_button_block button{
+    font-size: 15px;
+    border-radius: 10px;
+    margin-right: 10px;
+}
+
 .panel table{
     font-size: 25px;
+
 }
 
 .panel td{
     padding: 5px 10px;
+    width: 50%;
 }
