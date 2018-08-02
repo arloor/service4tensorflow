@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Detect8000" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <module name="objectdetect" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="application.DetectApplication" />
+    <option name="ACTIVE_PROFILES" value="8000" />
+    <option name="ALTERNATIVE_JRE_PATH" />
+    <method />
+  </configuration>
+</component>

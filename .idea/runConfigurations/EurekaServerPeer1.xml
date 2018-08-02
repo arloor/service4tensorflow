@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="EurekaServerPeer1" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot">
+    <module name="eureka4tensorflow" />
+    <option name="SPRING_BOOT_MAIN_CLASS" value="eureka.EurekaServer" />
+    <option name="ACTIVE_PROFILES" value="peer1" />
+    <option name="ALTERNATIVE_JRE_PATH" />
+    <method />
+  </configuration>
+</component>
