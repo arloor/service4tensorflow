@@ -68,7 +68,6 @@ public class DetectService {
 
     public void reload() {
         SavedModelBundle oldModel = model;
-
         logger.info("tensorflow api 版本： " + TensorFlow.version());
         try {
             logger.info("加载label from " + labelsPath);
@@ -108,8 +107,6 @@ public class DetectService {
         } finally {
             rwl.writeLock().unlock();
         }
-
-
     }
 
     public List<DetectResult> doService(List<String> imageURLs) throws Exception {
