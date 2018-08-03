@@ -8,7 +8,6 @@ spring:
     password: guest
     virtual-host: /objectdetect
     publisher-confirms: true
-
 server:
   port: 9000
 logging:

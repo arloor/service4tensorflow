@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<html lang="zh" >
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>服务监测与控制</title>
 
     <link href="style.css" rel="stylesheet" type="text/css">
 
@@ -10,27 +10,19 @@
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 </head>
 <body>
-<!--<div id="app">-->
-<!--{{ message }}-->
-<!--</div>-->
-
-<!--<div id="app-2">-->
-<!--<span v-bind:title="message">-->
-<!--鼠标悬停几秒钟查看此处动态绑定的提示信息！-->
-<!--</span>-->
-<!--</div>-->
-
-
-<div id="header">
+<div class="header">
+    <div id="tips" style="display: none">
+        <h1 style="text-align: center;">正在检查模型地址的有效性</h1>
+    </div>
     <div class="model_info" style="display: inline">
         <label>模型地址</label>
-        <input type="text" placeholder="请输入模型的地址" value="">
+        <input type="text" id="modelURL" placeholder="请输入模型的地址" value="http://localhost:9000/saved_model.pb">
     </div>
 </div>
 
 <div id="button_area">
     <div class="input">
-        <button>更新所有模型</button>
+        <button onclick="update_all_models()">更新所有模型</button>
         <button onclick="for_all_status()">刷新所有节点</button>
         <button onclick="get_all_status()">显示最新状态</button>
     </div>
@@ -72,7 +64,7 @@
             </tr>
         </table>
         <div class="panel_input">
-            <button>更新节点模型</button>
+            <button v-on:click="update_single_model(node.nodeName)">更新节点模型</button>
         </div>
     </div>
 
@@ -93,15 +85,18 @@
             <h2>更新模型功能说明</h2>
             <p>首先，该管理后台并不执行对各个节点模型的更新操作，而是发送更新模型的命令给各个节点，由各个节点执行自己的模型更新操作。</p>
             <p>服务实例将模型载入内存：通过网络IO从URL直接加载模型到内存。</p>
-            <p>考虑：因为模型的下载（从网络到本地）必然有一次网络IO，先从网络下载到硬盘再从硬盘加载的方案，多了一步，也不便于管理。直接从网络加载到内存，步骤简便也方便管理（可以方便处理传输异常）。网络传输的可靠性及安全性暂没有思路进行保证。</p>
+            <p>
+                考虑：因为模型的下载（从网络到本地）必然有一次网络IO，先从网络下载到硬盘再从硬盘加载的方案，多了一步，也不便于管理。直接从网络加载到内存，步骤简便也方便管理（可以方便处理传输异常）。网络传输的可靠性及安全性暂没有思路进行保证。</p>
             <h2>实现原理/架构</h2>
             <p>关键词： broker模式 异步通信 发布订阅</p>
             <p>首先用系统顺序图展示以下各个节点之间的交互</p>
             <img src="shunxutu.png">
             <p>解释：启动部分，rabbitMq的消费者需要注册exchange、queue以及binding。这样消费者只要知道发送给哪个exchange以及路由键即可。</p>
             <p>关于架构：可以看到，在系统中使用了大量的异步请求。这样的弊端是：发送请求和接收响应需要分成两步。这一点确实不怎么方便</p>
-            <p>这样设计的原因和本质是，rabbitMQ承担了代理的角色，可以算架构模式中的broker（代理）模式吧。下面将rabbitMQ称为代理。没有这个代理时，管理节点和服务节点要直接通信，首先管理节点和服务节点要互相知道。怎么互相知道？首先服务节点需要知道管理节点的ip端口，然后所有服务节点都需要向管理节点注册自己。这一套大概被服务注册/发现广泛使用了。</p>
-            <p>这样设计算挺好的吧，硬要说不好，大概就是管理节点和服务节点之间的强耦合。引入broker，那么管理节点和服务节点不进行直接的通信，只向broker发送消息。双方无需知道对方在哪里，怎么向彼此发送消息。只需要制定“契约”——通信内容的格式及其含义。类似面向对象设计中依赖倒置、面向接口而非实现，双方都遵守同一份契约（接口）。这也是我采用这个模式的原因。</p>
+            <p>
+                这样设计的原因和本质是，rabbitMQ承担了代理的角色，可以算架构模式中的broker（代理）模式吧。下面将rabbitMQ称为代理。没有这个代理时，管理节点和服务节点要直接通信，首先管理节点和服务节点要互相知道。怎么互相知道？首先服务节点需要知道管理节点的ip端口，然后所有服务节点都需要向管理节点注册自己。这一套大概被服务注册/发现广泛使用了。</p>
+            <p>
+                这样设计算挺好的吧，硬要说不好，大概就是管理节点和服务节点之间的强耦合。引入broker，那么管理节点和服务节点不进行直接的通信，只向broker发送消息。双方无需知道对方在哪里，怎么向彼此发送消息。只需要制定“契约”——通信内容的格式及其含义。类似面向对象设计中依赖倒置、面向接口而非实现，双方都遵守同一份契约（接口）。这也是我采用这个模式的原因。</p>
             <p>其实这个broker的实现可以不是rabbitMQ，rabbitMQ带来了需要异步的问题，异步在这里优势和劣势都有。考虑到时间不足的原因，没有自己造轮子做一个broker。</p>
             <!--<p>当前项目的整体架构</p>-->
             <!--<img style="width: 700px;margin: 0 auto"  src="structure.png">-->
@@ -122,6 +117,22 @@
             nodes: []
         },
         methods: {
+            update_single_model:function (nodeName) {
+                var modelURL = document.getElementById("modelURL").value;
+                var xmlhttp = new XMLHttpRequest();
+                ;
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                        getModelUrl();
+                        alert(xmlhttp.responseText);
+                    }
+                    document.getElementById("tips").style.display = "none";
+                }
+                xmlhttp.open("GET", "http://localhost:9000/model/updateSingleModel?modelURL=" + modelURL+"&nodeName="+nodeName, true);
+                xmlhttp.setRequestHeader("Content-type", "application/json");
+                xmlhttp.send();
+                alert("正在检测模型有效性")
+            },
             for_single_status: function (nodeName) {
                 var xmlhttp = new XMLHttpRequest();
                 ;
@@ -153,7 +164,6 @@
 
     function for_all_status() {
         var xmlhttp = new XMLHttpRequest();
-        ;
         xmlhttp.onreadystatechange = function () {
             if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
                 // alert(xmlhttp.responseText);
@@ -170,7 +180,6 @@
             if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
                 var result = eval('(' + xmlhttp.responseText + ')');
                 panel_area.nodes = result;
-
             }
         }
         xmlhttp.open("GET", "http://localhost:9000/get_all_status", true);
@@ -178,8 +187,42 @@
         xmlhttp.send();
     }
 
+    function update_all_models() {
+
+        var modelURL = document.getElementById("modelURL").value;
+        var xmlhttp = new XMLHttpRequest();
+        ;
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                getModelUrl();
+                alert(xmlhttp.responseText);
+
+            }
+            document.getElementById("tips").style.display = "none";
+        }
+        xmlhttp.open("GET", "http://localhost:9000/model/updateAllModel?modelURL=" + modelURL, true);
+        xmlhttp.setRequestHeader("Content-type", "application/json");
+        xmlhttp.send();
+        document.getElementById("tips").style.display = "block";
+    }
+
+    function getModelUrl() {
+        var xmlhttp = new XMLHttpRequest();
+        ;
+        xmlhttp.onreadystatechange = function () {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                document.getElementById("modelURL").value = xmlhttp.responseText;
+            }
+        }
+
+        xmlhttp.open("GET", "http://localhost:9000/model/modelURL", true);
+        xmlhttp.setRequestHeader("Content-type", "application/json");
+        xmlhttp.send();
+    }
+
     window.onload = function (ev) {
-        get_all_status()
+        get_all_status();
+        getModelUrl();
     }
 </script>
 </html>

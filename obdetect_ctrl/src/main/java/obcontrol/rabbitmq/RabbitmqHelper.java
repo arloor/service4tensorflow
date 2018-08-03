@@ -82,7 +82,7 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
 
     @Bean
     public Queue queue() {
-        return new Queue(QUEUE_NAME, true); //队列持久
+        return new Queue(QUEUE_NAME, false); //队列持久
 
     }
 

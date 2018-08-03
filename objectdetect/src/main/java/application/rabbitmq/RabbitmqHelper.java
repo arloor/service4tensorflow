@@ -97,7 +97,7 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
     public Queue queue() {
         QUEUE_NAME="ob-"+host+"-"+IP+"-"+port;
         logger.info("注册 queue： "+QUEUE_NAME);
-        return new Queue(QUEUE_NAME, true); //队列持久
+        return new Queue(QUEUE_NAME, false); //队列持久
 
     }
 
@@ -135,6 +135,7 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
                 //msg= "ob-"+host+"-"+IP+"-"+port+"::"+order
                 if(msg.startsWith(QUEUE_NAME)||msg.startsWith("all")){
                     String order=msg.substring(msg.indexOf("::")+2);
+                    //order=status
                     if(order.equals("status")){
                         //获取本身状态，发送
                         Status status=detectService.staus(staus(new Status()));
@@ -146,6 +147,12 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
                         } catch (JsonProcessingException e) {
                             e.printStackTrace();
                         }
+                    }
+                    //order=update::http://localhost:9000/saved_model.pb
+                    if(order.startsWith("update")){
+                        String updateURL=order.substring(order.indexOf("::")+2);
+                        logger.info("开始加载"+updateURL+"的模型");
+                        detectService.updateModelFromURL(updateURL);
                     }
                 }
             }
