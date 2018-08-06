@@ -112,7 +112,7 @@ public class ModelController {
                 Path target = Paths.get(targetPath);
                 Files.createDirectories(target.getParent());
                 //每次下载20m
-                connection.setRequestProperty("RANGE", "bytes=" + total + "-" + (total + 20971519));
+                connection.setRequestProperty("Range", "bytes=" + total + "-" + (total + 20971519));
 
 
                 try(InputStream is = connection.getInputStream()) {
@@ -132,6 +132,7 @@ public class ModelController {
 
                     if (total == oldTotal) {
                         logger.info("下载结束，共"+total+"字节");
+                        oSavedFile.close();
                         break;
                     }
                     logger.info("下载模型部分字节："+oldTotal + "-" + total);
@@ -154,12 +155,6 @@ public class ModelController {
                 if(e.getMessage().equals("传输异常")){
                     //doNothing 说明是传输问题，直接进行断点续传
                 }else return "模型地址URL无效 " + e.getMessage();
-            }finally {
-                try {
-                    oSavedFile.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
             }
         }
 

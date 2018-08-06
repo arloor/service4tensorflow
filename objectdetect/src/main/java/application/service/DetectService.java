@@ -79,8 +79,8 @@ public class DetectService {
             } else {
                 logger.info("加载model from " + modelDownloadDir);
                 model = SavedModelBundle.load(modelDownloadDir, "serve");
-                String targetPath = modelDownloadDir + "/saved_model.pb";
                 //删除下载的模型，以防下一次下载的模型小于上一次的，导致就模型结尾保留
+                String targetPath = modelDownloadDir + "/saved_model.pb";
                 File file=new File(targetPath);
                 file.delete();
             }
@@ -295,33 +295,7 @@ public class DetectService {
             return;
         }
 
-        //非断点续传版本  云服务商对象存储支持
-//        //测试输入的url文件是否有效,是否能够下载
-//        logger.info("开始下载model文件，并检测url有效性");
-//        try (InputStream is = new URL(modelURL).openStream()) {
-//            String targetPath = modelDownloadDir + "/saved_model.pb";
-//            Path target = Paths.get(targetPath);
-//            Files.createDirectories(target.getParent());
-//
-//            Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
-//        } catch (MalformedURLException e) {
-//            e.printStackTrace();
-//            logger.info("模型地址URL不正确 " + e.getMessage());
-//            return;
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            logger.info("模型地址URL无效 " + e.getMessage());
-//            return;
-//        } catch (IllegalArgumentException e) {
-//            e.printStackTrace();
-//            logger.info("模型地址URL无效 " + e.getMessage());
-//            return;
-//        } catch (Exception e) {
-//            logger.info("模型地址URL无效 " + e.getMessage());
-//            return;
-//        }
-
-        //断点续传版本  不支持oss的http链接
+        //断点续传版本  不支持对象存储的http链接
         logger.info("开始检测url及模型的有效性");
         String targetPath = modelDownloadDir + "/saved_model.pb";
         RandomAccessFile oSavedFile = null;
@@ -345,7 +319,7 @@ public class DetectService {
                 Path target = Paths.get(targetPath);
                 Files.createDirectories(target.getParent());
                 //每次下载20m
-                connection.setRequestProperty("RANGE", "bytes=" + total + "-" + (total + 20971519));
+                connection.setRequestProperty("Range", "bytes=" + total + "-" + (total + 20971519));
 
                 try(InputStream is = connection.getInputStream()) {
                     byte[] b = new byte[8096];
