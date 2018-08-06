@@ -12,3 +12,8 @@ server:
   port: 9000
 logging:
   file: ob_detect.txt
+
+filepath:
+  relative:
+    testModelDir:
+      tensor_model/objectdetect/models/obdect_model/test/saved_model

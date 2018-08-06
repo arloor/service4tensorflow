@@ -5,6 +5,7 @@ import org.apache.catalina.servlet4preview.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,6 +21,9 @@ import java.nio.file.StandardCopyOption;
 @RestController
 @RequestMapping("/model")
 public class ModelController {
+    @Value("${filepath.relative.testModelDir}")
+    private String testModelDir;
+
     private static Logger logger=LoggerFactory.getLogger(ModelController.class);
 
     private String modelURL="http://localhost:9000/saved_model.pb";
@@ -56,14 +60,14 @@ public class ModelController {
 
     }
 
-    //在这里加锁，保证一次只有一个在下载和写文件，要是同时写文件，有锁
+    //在这里加锁，保证一次只有一个在下载和写文件，要是同时写文件，有文件锁
     private synchronized String testModelUrl(String modelURL, HttpServletRequest request) {
         logger.info("开始检测url及模型的有效性");
-        String parentDir=request.getServletContext().getRealPath("");
+        String targetPath=testModelDir +"/saved_model.pb";
         //测试输入的url文件是否有效,是否能够下载
         try(InputStream is=new URL(modelURL).openStream()) {
             URL url=new URL(modelURL);
-            String targetPath=request.getServletContext().getRealPath("/saved_model.pb");
+
             Path target = Paths.get(targetPath);
             Files.createDirectories(target.getParent());
 //            System.out.println(targetPath);
@@ -83,7 +87,7 @@ public class ModelController {
         }
 
         //测试模型是否能有效加载
-        try(SavedModelBundle model=SavedModelBundle.load(parentDir, "serve")){
+        try(SavedModelBundle model=SavedModelBundle.load(testModelDir, "serve")){
             return "valid";
 
         }catch (org.tensorflow.TensorFlowException e){

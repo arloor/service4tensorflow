@@ -287,6 +287,12 @@ public class DetectService {
 
     //在这里加锁，保证一次只有一个在下载和写文件，要是同时写文件，有锁
     public synchronized void updateModelFromURL(String modelURL) {
+        //如果模型还没有加载过，则忽略加载命令
+        //如果不忽略，就加载了两个模型，并且其中一个没有办法被close，就不再有引用指向
+        if(model==null){
+            logger.warn("忽略模型加载命令，因为应用启动时的加载还未完成");
+            return;
+        }
         //测试输入的url文件是否有效,是否能够下载
         logger.info("开始下载model文件，并检测url有效性");
         try (InputStream is = new URL(modelURL).openStream()) {
