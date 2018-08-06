@@ -2,8 +2,6 @@ package application.service;
 
 import static object_detection.protos.StringIntLabelMapOuterClass.StringIntLabelMap;
 import static object_detection.protos.StringIntLabelMapOuterClass.StringIntLabelMapItem;
-import static object_detection.protos.StringIntLabelMapOuterClass.registerAllExtensions;
-
 import application.model.DetectResult;
 import application.model.Status;
 import application.utils.Utils;
@@ -11,11 +9,10 @@ import com.google.protobuf.TextFormat;
 
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -82,6 +79,10 @@ public class DetectService {
             } else {
                 logger.info("加载model from " + modelDownloadDir);
                 model = SavedModelBundle.load(modelDownloadDir, "serve");
+                String targetPath = modelDownloadDir + "/saved_model.pb";
+                //删除下载的模型，以防下一次下载的模型小于上一次的，导致就模型结尾保留
+                File file=new File(targetPath);
+                file.delete();
             }
             logger.info("加载模型成功");
             updateTime = Utils.getFormedDate();
@@ -293,29 +294,100 @@ public class DetectService {
             logger.warn("忽略模型加载命令，因为应用启动时的加载还未完成");
             return;
         }
-        //测试输入的url文件是否有效,是否能够下载
-        logger.info("开始下载model文件，并检测url有效性");
-        try (InputStream is = new URL(modelURL).openStream()) {
-            String targetPath = modelDownloadDir + "/saved_model.pb";
+
+        //非断点续传版本  云服务商对象存储支持
+//        //测试输入的url文件是否有效,是否能够下载
+//        logger.info("开始下载model文件，并检测url有效性");
+//        try (InputStream is = new URL(modelURL).openStream()) {
+//            String targetPath = modelDownloadDir + "/saved_model.pb";
+//            Path target = Paths.get(targetPath);
+//            Files.createDirectories(target.getParent());
+//
+//            Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
+//        } catch (MalformedURLException e) {
+//            e.printStackTrace();
+//            logger.info("模型地址URL不正确 " + e.getMessage());
+//            return;
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            logger.info("模型地址URL无效 " + e.getMessage());
+//            return;
+//        } catch (IllegalArgumentException e) {
+//            e.printStackTrace();
+//            logger.info("模型地址URL无效 " + e.getMessage());
+//            return;
+//        } catch (Exception e) {
+//            logger.info("模型地址URL无效 " + e.getMessage());
+//            return;
+//        }
+
+        //断点续传版本  不支持oss的http链接
+        logger.info("开始检测url及模型的有效性");
+        String targetPath = modelDownloadDir + "/saved_model.pb";
+        RandomAccessFile oSavedFile = null;
+        try {
             Path target = Paths.get(targetPath);
             Files.createDirectories(target.getParent());
+            oSavedFile = new RandomAccessFile(targetPath, "rw");
 
-            Files.copy(is, target, StandardCopyOption.REPLACE_EXISTING);
-        } catch (MalformedURLException e) {
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
-            logger.info("模型地址URL不正确 " + e.getMessage());
-            return;
         } catch (IOException e) {
             e.printStackTrace();
-            logger.info("模型地址URL无效 " + e.getMessage());
-            return;
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-            logger.info("模型地址URL无效 " + e.getMessage());
-            return;
-        } catch (Exception e) {
-            logger.info("模型地址URL无效 " + e.getMessage());
-            return;
+        }
+        int total = 0;
+        int oldTotal=total;
+        while (true) {
+            //测试输入的url文件是否有效,是否能够下载
+            try {
+                URL url = new URL(modelURL);
+                URLConnection connection = url.openConnection();
+                Path target = Paths.get(targetPath);
+                Files.createDirectories(target.getParent());
+                //每次下载20m
+                connection.setRequestProperty("RANGE", "bytes=" + total + "-" + (total + 20971519));
+
+                try(InputStream is = connection.getInputStream()) {
+                    byte[] b = new byte[8096];
+                    int nRead;
+                    oSavedFile.seek(total);
+                    while ((nRead = is.read(b, 0, 8096)) > 0) {
+                        oSavedFile.write(b, 0, nRead);
+                        total += nRead;
+                    }
+
+                    if (total == oldTotal) {
+                        logger.info("下载结束，共"+total+"字节");
+                        oSavedFile.close();
+                        break;
+                    }
+                    logger.info("下载模型部分字节："+oldTotal + "-" + total);
+                    oldTotal = total;
+
+                }catch (Exception e){
+                    System.out.println(e.getMessage());
+                    throw new Exception("传输异常");
+                }
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+                System.out.println( "模型地址URL不正确 " + e.getMessage());
+                return;
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println( "模型地址URL无效 " + e.getMessage());
+                return;
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+                System.out.println( "模型地址URL无效 " + e.getMessage());
+                return;
+            } catch (Exception e) {
+                if(e.getMessage().equals("传输异常")){
+                    //doNothing 说明是传输问题，直接进行断点续传
+                }else {
+                    System.out.println("模型地址URL无效 " + e.getMessage());
+                    return;
+                }
+            }
         }
 
         this.modelURL = modelURL;
