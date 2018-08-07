@@ -81,7 +81,7 @@ Proxy-Connection: keep-alive
   }
 ]
 
-Response code: 200; Time: 7834ms; Content length: 381 bytes
+Response code: 200; Time: 1834ms; Content length: 381 bytes
 ```
 
 请求体是网络图片的url数组。响应中给出了每个图片对应的检测结果。
