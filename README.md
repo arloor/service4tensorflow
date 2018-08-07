@@ -103,6 +103,7 @@ Response code: 200; Time: 1834ms; Content length: 381 bytes
 ![分片传输](image/fenpian.png)
 
 断点续传效果示意图
+
 ![断点传输](image/duandian.png)
 
 断点续传及分片传输都依靠http 1.1协议中的Range和Conten-Range。
