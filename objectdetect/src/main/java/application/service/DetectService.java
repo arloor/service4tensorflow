@@ -259,7 +259,7 @@ public class DetectService {
     }
 
     public Status staus(Status status) {
-        status.setUpdateTime(updateTime);
+        status.setUpdateTime(this.updateTime==null?"节点仍在启动中":this.updateTime);
         status.setModelURL(this.modelURL == null ? "使用预置model" : this.modelURL);
         return status;
     }

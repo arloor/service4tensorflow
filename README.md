@@ -7,6 +7,7 @@ tensorflow是业界较为成熟的人工智能框架。为方便编程人员，t
 本系统以tensorflow仓库中物体探测的模型为例，编写java的调用代码，并进行服务化。参考了github tensorflow/model项目下的java object_detect代码，进行修改生成的restful api风格的tensorflow服务
 
 [参考的原代码及说明地址](https://github.com/tensorflow/models/tree/de2842408a1790a56718c293e01e0d555fa84035/samples/languages/java/object_detection)链接所指代码的版本就是使用的版本
+
 ## 依赖
 
 - jdk8
