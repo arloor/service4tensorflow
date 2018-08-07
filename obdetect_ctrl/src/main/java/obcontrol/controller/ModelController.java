@@ -161,12 +161,14 @@ public class ModelController {
 
         //测试模型是否能有效加载
         try (SavedModelBundle model = SavedModelBundle.load(testModelDir, "serve")) {
-            //删除这次测试模型文件，以防下次测试时留存的模型文件过长导致末尾字节仍然留存
-            File targetFile = new File(targetPath);
-            targetFile.delete();
             return "valid";
         } catch (org.tensorflow.TensorFlowException e) {
             return "模型文件无效，请输入tag为serve的有效模型地址";
+        }finally {
+            //删除这次测试模型文件，以防下次测试时留存的模型文件过长导致末尾字节仍然留存
+            File targetFile = new File(targetPath);
+            boolean deleted=targetFile.delete();
+            logger.info("删除下载的模型：" +deleted);
         }
     }
 

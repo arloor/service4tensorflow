@@ -1,4 +1,3 @@
-
 spring:
   application:
     name: eureka-server
@@ -12,5 +11,5 @@ eureka:
     fetch-registry: false
     service-url:
       defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
-logging:
-  file: eureka_log.txt
+#logging:
+#  file: eureka_log.txt

@@ -79,16 +79,19 @@ public class DetectService {
             } else {
                 logger.info("加载model from " + modelDownloadDir);
                 model = SavedModelBundle.load(modelDownloadDir, "serve");
-                //删除下载的模型，以防下一次下载的模型小于上一次的，导致就模型结尾保留
-                String targetPath = modelDownloadDir + "/saved_model.pb";
-                File file=new File(targetPath);
-                file.delete();
+
             }
             logger.info("加载模型成功");
             updateTime = Utils.getFormedDate();
         } catch (Exception e) {
             e.printStackTrace();
             logger.info("模型文件无效，请输入tag为serve的有效模型地址");
+        }finally {
+            //删除下载的模型，以防下一次下载的模型小于上一次的，导致就模型结尾保留
+            String targetPath = modelDownloadDir + "/saved_model.pb";
+            File file=new File(targetPath);
+            boolean deleted=file.delete();
+            logger.info("删除下载的模型：" +deleted);
         }
 
         //这一段实际在控制，只要还有线程在使用旧的model，就不能释放旧的model。
