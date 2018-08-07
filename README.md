@@ -123,7 +123,7 @@ Response code: 200; Time: 1834ms; Content length: 381 bytes
 
 首先用系统顺序图展示以下各个节点之间的交互
             
-![系统顺序图](shunxutu.png)
+![系统顺序图](image/shunxutu.png)
 
 解释：启动部分，rabbitMq的消费者需要注册exchange、queue以及binding。这样消费者只要知道发送给哪个exchange以及路由键即可。
 
