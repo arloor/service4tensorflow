@@ -28,7 +28,7 @@ tensorflow是业界较为成熟的人工智能框架。为方便编程人员，t
 
 ## 架构图
 
-![架构图](structure.png)
+![架构图](image/structure.png)
 
 整个架构比较简单。从服务的角度看，就是网关+服务注册中心+服务节点。从控制的角度看，控制节点通过rabbitMq与服务节点通信，传递状态信息和控制信息。
 
@@ -92,8 +92,17 @@ Response code: 200; Time: 1834ms; Content length: 381 bytes
 
 ### 控制节点
 
-![控制节点](ctrl.png)
+![控制节点](image/ctrl.png)
 
 可以查看节点的状态和使用的模型地址，并更新模型地址。模型地址支持https。
 
 下载模型时自动使用了断点续传和分片下载功能，用于确保大模型的传输。
+
+分片传输效果示意图：
+
+![分片传输](image/fenpian.png)
+
+断点续传效果示意图
+![断点传输](image/duandian.png)
+
+断点续传及分片传输都依靠http 1.1协议中的Range和Conten-Range。

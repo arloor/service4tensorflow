@@ -10,8 +10,8 @@ spring:
     publisher-confirms: true
 server:
   port: 9000
-logging:
-  file: ob_detect.txt
+#logging:
+#  file: ob_detect.txt
 
 filepath:
   relative:
