@@ -310,7 +310,6 @@ public class DetectService {
             e.printStackTrace();
         }
         int total = 0;
-        int oldTotal=total;
         while (true) {
             //测试输入的url文件是否有效,是否能够下载
             try {
@@ -321,7 +320,11 @@ public class DetectService {
                 //每次下载20m
                 connection.setRequestProperty("Range", "bytes=" + total + "-" + (total + 20971519));
 
-                try(InputStream is = connection.getInputStream()) {
+                try (InputStream is = connection.getInputStream()) {
+                    String contentRange = connection.getHeaderField("Content-Range");
+                    logger.info("下载分片： " + contentRange);
+                    //byteSum是文件的字节长度，通过它与total（下载总数）比较判断是否下载完毕。
+                    int bytesNum = Integer.parseInt(contentRange.substring(contentRange.indexOf("/") + 1));
                     byte[] b = new byte[8096];
                     int nRead;
                     oSavedFile.seek(total);
@@ -330,15 +333,13 @@ public class DetectService {
                         total += nRead;
                     }
 
-                    if (total == oldTotal) {
-                        logger.info("下载结束，共"+total+"字节");
+                    if (total == bytesNum) {
+                        logger.info("下载结束，共" + total + "字节");
                         oSavedFile.close();
                         break;
                     }
-                    logger.info("下载模型部分字节："+oldTotal + "-" + total);
-                    oldTotal = total;
 
-                }catch (Exception e){
+                } catch (Exception e) {
                     System.out.println(e.getMessage());
                     throw new Exception("传输异常");
                 }

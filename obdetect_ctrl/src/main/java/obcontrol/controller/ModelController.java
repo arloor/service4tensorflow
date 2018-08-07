@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.tensorflow.SavedModelBundle;
+
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -26,36 +27,36 @@ public class ModelController {
     @Value("${filepath.relative.testModelDir}")
     private String testModelDir;
 
-    private static Logger logger=LoggerFactory.getLogger(ModelController.class);
+    private static Logger logger = LoggerFactory.getLogger(ModelController.class);
 
-    private String modelURL="http://localhost:9000/saved_model.pb";
+    private String modelURL = "http://localhost:9000/saved_model.pb";
 
     @Autowired
     RabbitmqHelper rabbitmqHelper;
 
     @RequestMapping("/updateSingleModel")
-    public String updateSingleModel(@RequestParam String nodeName,@RequestParam String modelURL){
-        String result=testModelUrl(modelURL);
-        if(result.equals("valid")){
+    public String updateSingleModel(@RequestParam String nodeName, @RequestParam String modelURL) {
+        String result = testModelUrl(modelURL);
+        if (result.equals("valid")) {
             this.setModelURL(modelURL);
             //通知所有节点更新模型5
-            rabbitmqHelper.send(nodeName+"::update::"+modelURL);
-            return "已向"+nodeName+"发送更新模型命令,更新后的模型地址将会是 "+modelURL;
-        }else{
+            rabbitmqHelper.send(nodeName + "::update::" + modelURL);
+            return "已向" + nodeName + "发送更新模型命令,更新后的模型地址将会是 " + modelURL;
+        } else {
             return result;
         }
     }
 
     @RequestMapping("/updateAllModel")
-    public  String updateAllModel(@RequestParam String modelURL,
-                                 org.apache.catalina.servlet4preview.http.HttpServletRequest request){
-        String result=testModelUrl(modelURL);
-        if(result.equals("valid")){
+    public String updateAllModel(@RequestParam String modelURL,
+                                 org.apache.catalina.servlet4preview.http.HttpServletRequest request) {
+        String result = testModelUrl(modelURL);
+        if (result.equals("valid")) {
             this.setModelURL(modelURL);
             //通知所有节点更新模型5
-            rabbitmqHelper.send("all::update::"+modelURL);
+            rabbitmqHelper.send("all::update::" + modelURL);
             return "已向所有节点发送更新模型命令";
-        }else{
+        } else {
             return result;
         }
 
@@ -96,14 +97,12 @@ public class ModelController {
             Path target = Paths.get(targetPath);
             Files.createDirectories(target.getParent());
             oSavedFile = new RandomAccessFile(targetPath, "rw");
-
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
         int total = 0;
-        int oldTotal=total;
         while (true) {
             //测试输入的url文件是否有效,是否能够下载
             try {
@@ -114,31 +113,33 @@ public class ModelController {
                 //每次下载20m
                 connection.setRequestProperty("Range", "bytes=" + total + "-" + (total + 20971519));
 
-
-                try(InputStream is = connection.getInputStream()) {
+                try (InputStream is = connection.getInputStream()) {
+                    String contentRange = connection.getHeaderField("Content-Range");
+                    logger.info("下载分片： " + contentRange);
+                    //byteSum是文件的字节长度，通过它与total（下载总数）比较判断是否下载完毕。
+                    int bytesNum = Integer.parseInt(contentRange.substring(contentRange.indexOf("/") + 1));
                     byte[] b = new byte[8096];
                     int nRead;
                     oSavedFile.seek(total);
-                    int num=0;
+                    int num = 0;
                     while ((nRead = is.read(b, 0, 8096)) > 0) {
                         oSavedFile.write(b, 0, nRead);
                         total += nRead;
                         num++;
-                        //手动抛出异常，模拟下载时出错，激发断点续传
-//                        if(num==2469){
-//                            throw new Exception("手动异常，检测断点续传。已下载字节数"+total);
+//                        //手动抛出异常，模拟下载时出错，激发断点续传
+//                        if (num == 2469) {
+//                            throw new Exception("手动异常，激发断点续传。 已下载字节数： " + total);
 //                        }
                     }
 
-                    if (total == oldTotal) {
-                        logger.info("下载结束，共"+total+"字节");
+                    if (total == bytesNum) {
+                        logger.info("下载结束，共" + total + "字节");
                         oSavedFile.close();
                         break;
                     }
-                    logger.info("下载模型部分字节："+oldTotal + "-" + total);
-                    oldTotal = total;
 
-                }catch (Exception e){
+                } catch (Exception e) {
+//            e.printStackTrace();
                     logger.info(e.getMessage());
                     throw new Exception("传输异常");
                 }
@@ -152,28 +153,26 @@ public class ModelController {
                 e.printStackTrace();
                 return "模型地址URL无效 " + e.getMessage();
             } catch (Exception e) {
-                if(e.getMessage().equals("传输异常")){
+                if (e.getMessage().equals("传输异常")) {
                     //doNothing 说明是传输问题，直接进行断点续传
-                }else return "模型地址URL无效 " + e.getMessage();
+                } else return "模型地址URL无效 " + e.getMessage();
             }
         }
 
         //测试模型是否能有效加载
-        try(SavedModelBundle model=SavedModelBundle.load(testModelDir, "serve")){
+        try (SavedModelBundle model = SavedModelBundle.load(testModelDir, "serve")) {
             //删除这次测试模型文件，以防下次测试时留存的模型文件过长导致末尾字节仍然留存
-            File targetFile=new File(targetPath);
+            File targetFile = new File(targetPath);
             targetFile.delete();
             return "valid";
-        }catch (org.tensorflow.TensorFlowException e){
+        } catch (org.tensorflow.TensorFlowException e) {
             return "模型文件无效，请输入tag为serve的有效模型地址";
         }
     }
 
 
-
-
     @RequestMapping("/modelURL")
-    public String defaultModelURL(){
+    public String defaultModelURL() {
         return modelURL;
     }
 
