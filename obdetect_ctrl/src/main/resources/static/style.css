@@ -92,7 +92,7 @@ body{
 
 .article_block img{
     width: 900px;
-    height: 100%;
+    height: auto;
     align-content: center;
 }
 
