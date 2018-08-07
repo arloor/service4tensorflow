@@ -24,7 +24,7 @@ tensorflow是业界较为成熟的人工智能框架。为方便编程人员，t
 
 ## 安装tensorflow r1.8
 
-`tensorflow pip3 install --upgrade --ignore-installed  --upgrade tensorflow==1.8.0`
+`tensorflow pip3 install --upgrade --ignore-installed  --upgrade -i https://pypi.tuna.tsinghua.edu.cn/simple tensorflow==1.8.0`
 
 ## 架构图
 
