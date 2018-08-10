@@ -10,6 +10,11 @@ spring:
     publisher-confirms: true
 server:
   port: 9000
+  ssl:
+    key-store: classpath:api.moontell.cn.jks
+    key-store-password: 123456
+    keyStoreType: JKS
+    keyAlias: api.moontell.cn
 #logging:
 #  file: ob_detect.txt
 

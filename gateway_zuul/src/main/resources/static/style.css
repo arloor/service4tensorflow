@@ -1,0 +1,15 @@
+body{
+    display: flex;
+    display: -webkit-flex;
+    flex-flow: column;
+    align-items: center;
+}
+
+.block p{
+    margin: 0 5px;
+    font-size: 20px;
+}
+
+.block h3{
+    margin: 0 5px;
+}

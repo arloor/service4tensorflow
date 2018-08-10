@@ -2,36 +2,99 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Moontell服务网关</title>
+    <title>测试物体监测服务</title>
+
+    <link href="style.css" rel="stylesheet" type="text/css">
 </head>
 <body>
-<h3>moontell.cn服务网关</h3>
-<p><a href="./testobjectdetect.html">测试物体检测接口</a></p>
-<p><a href="http://api.moontell.cn:7000">eureka服务注册中心</a></p>
-<button onclick=shutdown_obdetect()>退出物体探测服务</button>
+<div class="block">
+    <form style="display: inline">
+        <select id="select" onchange="doSelect()" style="font-size: 20px;width: 300px">
+            <option selected style="display: none" id="selectPromp">
+                请选择图片
+            </option>
+            <option>
+                https://api.moontell.cn/1.jpg
+            </option>
+            <option>
+                https://api.moontell.cn/2.jpg
+            </option>
+            <option>
+                https://api.moontell.cn/3.jpg
+            </option>
+        </select>
+
+    </form>
+    <button style="display: inline"><p><a target="_blank" href="https://api.moontell.cn:9000/">服务管理平台</a></p></button>
+    <form>
+        <input id="myDefine" type="text" style="font-size: 18px;width: 300px" placeholder="自定义图片地址">
+        <button id="submitMyDefine" onclick="doMyDefine()"><p>检测自定义图片</p></button>
+    </form>
+</div>
+<div class="block" style="display: none" id="result">
+    <h2>正在进行检测</h2>
+</div>
+<div class="block">
+    <img id="imgHolder" style="width: 900px;height: auto;display: none">
+</div>
+
 </body>
 <script>
 
-    function shutdown_obdetect() {
+    function doMyDefine(){
+        var src=document.getElementById("myDefine").value;
+        if(src==""){
+            alert("输入为空");
+            return;
+        }
+        document.getElementById("selectPromp").selected=true;
+        document.getElementById("imgHolder").src = src;
+        doQuery();
+    }
+
+    function doSelect() {
+        document.getElementById("imgHolder").src = document.getElementById("select").value;
+        doQuery();
+    }
+
+    function doQuery() {
+        document.getElementById("imgHolder").style.display = "block";
+        document.getElementById("result").style.display = "block";
+        document.getElementById("select").disabled=true;
+        document.getElementById("submitMyDefine").disabled=true;
+
         var xmlhttp;
-        if (window.XMLHttpRequest)
-        {// code for IE7+, Firefox, Chrome, Opera, Safari
-            xmlhttp=new XMLHttpRequest();
+        if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
+            xmlhttp = new XMLHttpRequest();
         }
-        else
-        {// code for IE6, IE5
-            xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+        else {// code for IE6, IE5
+            xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
         }
-        xmlhttp.onreadystatechange=function()
-        {
-            if (xmlhttp.readyState==4 && xmlhttp.status==200)
-            {
-                var result=eval('(' + xmlhttp.responseText + ')');
-                alert(result.message);
+        xmlhttp.onreadystatechange = function () {
+            document.getElementById("result").innerHTML = "<h2>正在进行监测</h2>";
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                document.getElementById("result").innerHTML = "";
+                var result = eval('(' + xmlhttp.responseText + ')');
+                for (var i in result) {
+                    // document.getElementById("result").innerHTML+="<h3>"+result[i].imageURL.toString()+"</h3>";
+                    var detectCells = result[i].detectCells;
+                    for (var j in detectCells) {
+                        document.getElementById("result").innerHTML += "<p>" + detectCells[j].toString() + "</p>";
+                    }
+                }
+                document.getElementById("select").disabled=false;
+                document.getElementById("submitMyDefine").disabled=false;
+            }else if(xmlhttp.readyState == 4){
+                document.getElementById("result").innerHTML="<h2>图片地址无效</h2>";
+                document.getElementById("imgHolder").style.display = "none";
+                document.getElementById("select").disabled=false;
+                document.getElementById("submitMyDefine").disabled=false;
             }
+
         }
-        xmlhttp.open("POST","https://api.moontell.cn/objectdetect/actuator/shutdown",true);
-        xmlhttp.send();
+        xmlhttp.open("POST", "https://api.moontell.cn/objectdetect/service", true);
+        xmlhttp.setRequestHeader("Content-type", "application/json");
+        xmlhttp.send('["' + document.getElementById("imgHolder").src + '"]');
     }
 </script>
 </html>

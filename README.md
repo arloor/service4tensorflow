@@ -89,8 +89,6 @@ Response code: 200; Time: 1834ms; Content length: 381 bytes
 
 `"Found mouse (score: 0.9833)"`表示 探测到了鼠标。
 
-目前，网络图片的url数组不支持https。因为代码中使用了imageIO，这个不支持https的url。
-
 ### 控制节点
 
 ![控制节点](image/ctrl.png)

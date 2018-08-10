@@ -124,8 +124,8 @@ public class DetectService {
 
 
             while (model == null || labels == null) {
-                logger.info("等待模型加载完成for 2 秒");
-                Thread.sleep(2000);
+                logger.info("等待模型加载完成for 0.5 秒");
+                Thread.sleep(500);
             }
 
             workModel = model;
@@ -242,7 +242,14 @@ public class DetectService {
 
     private static Tensor<UInt8> makeImageTensor(String filename) throws IOException {
 //    BufferedImage img = ImageIO.read(new File(filename));//从文件路径读
-        BufferedImage img = ImageIO.read(new URL(filename));//从URL读
+        //从URL读
+        BufferedImage img=null;
+        try (InputStream imgStream=new URL(filename).openStream()){
+            img = ImageIO.read(imgStream);
+        }catch (IOException e){
+            throw e;
+        }
+
         if (img.getType() != BufferedImage.TYPE_3BYTE_BGR) {
             throw new IOException(
                     String.format(
@@ -313,6 +320,7 @@ public class DetectService {
             e.printStackTrace();
         }
         int total = 0;
+        int tryTimes=0;
         while (true) {
             //测试输入的url文件是否有效,是否能够下载
             try {
@@ -343,6 +351,7 @@ public class DetectService {
                     }
 
                 } catch (Exception e) {
+                    e.printStackTrace();
                     System.out.println(e.getMessage());
                     throw new Exception("传输异常");
                 }
@@ -360,6 +369,15 @@ public class DetectService {
                 return;
             } catch (Exception e) {
                 if(e.getMessage().equals("传输异常")){
+                        tryTimes++;
+                        if(tryTimes==5){
+                            //删除这次测试模型文件，以防下次测试时留存的模型文件过长导致末尾字节仍然留存
+                            File targetFile = new File(targetPath);
+                            boolean deleted=targetFile.delete();
+                            logger.info("删除下载的模型：" +deleted);
+                            return;
+                        }
+                        //doNothing 说明是传输问题，直接进行断点续传
                     //doNothing 说明是传输问题，直接进行断点续传
                 }else {
                     System.out.println("模型地址URL无效 " + e.getMessage());
