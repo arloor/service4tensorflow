@@ -321,6 +321,7 @@ public class DetectService {
         }
         int total = 0;
         int tryTimes=0;
+        final int maxTryTime=5;
         while (true) {
             //测试输入的url文件是否有效,是否能够下载
             try {
@@ -370,8 +371,9 @@ public class DetectService {
             } catch (Exception e) {
                 if(e.getMessage().equals("传输异常")){
                         tryTimes++;
-                        if(tryTimes==5){
+                        if(tryTimes==maxTryTime){
                             //删除这次测试模型文件，以防下次测试时留存的模型文件过长导致末尾字节仍然留存
+                            logger.info("网络传输或url有问题，已重复"+maxTryTime+"次，退出！");
                             File targetFile = new File(targetPath);
                             boolean deleted=targetFile.delete();
                             logger.info("删除下载的模型：" +deleted);

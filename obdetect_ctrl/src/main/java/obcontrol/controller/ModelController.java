@@ -104,6 +104,7 @@ public class ModelController {
         }
         int total = 0;
         int tryTimes=0;
+        final int maxTryTime=5;
         while (true) {
             //测试输入的url文件是否有效,是否能够下载
             try {
@@ -156,12 +157,13 @@ public class ModelController {
             } catch (Exception e) {
                 if (e.getMessage().equals("传输异常")) {
                     tryTimes++;
-                    if(tryTimes==5){
+                    if(tryTimes==maxTryTime){
                         //删除这次测试模型文件，以防下次测试时留存的模型文件过长导致末尾字节仍然留存
+                        logger.info("网络传输或url有问题，已重复"+maxTryTime+"次，退出！");
                         File targetFile = new File(targetPath);
                         boolean deleted=targetFile.delete();
                         logger.info("删除下载的模型：" +deleted);
-                        return "所填写的url有误或网络存在问题，重复五次仍出现问题，已放弃！";
+                        return "所填写的url有误或网络存在问题，重复"+maxTryTime+"次仍出现问题，已放弃！";
                     }
                     //doNothing 说明是传输问题，直接进行断点续传
                 } else return "模型地址URL无效 " + e.getMessage();
