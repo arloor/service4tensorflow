@@ -71,27 +71,26 @@
             xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
         }
         xmlhttp.onreadystatechange = function () {
-            document.getElementById("result").innerHTML = "<h2>正在进行监测</h2>";
-            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                document.getElementById("result").innerHTML = "";
-                var result = eval('(' + xmlhttp.responseText + ')');
-                for (var i in result) {
-                    // document.getElementById("result").innerHTML+="<h3>"+result[i].imageURL.toString()+"</h3>";
-                    var detectCells = result[i].detectCells;
-                    for (var j in detectCells) {
-                        document.getElementById("result").innerHTML += "<p>" + detectCells[j].toString() + "</p>";
+            document.getElementById("result").innerHTML = "<h2>正在进行检测</h2>";
+            if(xmlhttp.readyState == 4){
+                document.getElementById("select").disabled=false;
+                document.getElementById("submitMyDefine").disabled=false;
+                if(xmlhttp.status == 200){
+                    document.getElementById("result").innerHTML = "";
+                    var result = eval('(' + xmlhttp.responseText + ')');
+                    for (var i in result) {
+                        // document.getElementById("result").innerHTML+="<h3>"+result[i].imageURL.toString()+"</h3>";
+                        var detectCells = result[i].detectCells;
+                        for (var j in detectCells) {
+                            document.getElementById("result").innerHTML += "<p>" + detectCells[j].toString() + "</p>";
+                        }
                     }
+                }else {
+                    document.getElementById("result").innerHTML="<h2>图片地址无效</h2>";
+                    document.getElementById("imgHolder").style.display = "none";
                 }
-                document.getElementById("select").disabled=false;
-                document.getElementById("submitMyDefine").disabled=false;
-            }else if(xmlhttp.readyState == 4){
-                document.getElementById("result").innerHTML="<h2>图片地址无效</h2>";
-                document.getElementById("imgHolder").style.display = "none";
-                document.getElementById("select").disabled=false;
-                document.getElementById("submitMyDefine").disabled=false;
             }
-
-        }
+        };
         xmlhttp.open("POST", "https://api.moontell.cn/objectdetect/service", true);
         xmlhttp.setRequestHeader("Content-type", "application/json");
         xmlhttp.send('["' + document.getElementById("imgHolder").src + '"]');
