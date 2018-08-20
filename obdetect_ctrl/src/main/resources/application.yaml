@@ -20,5 +20,5 @@ server:
 
 filepath:
   relative:
-    testModelDir:
-      tensor_model/objectdetect/models/obdect_model/test/saved_model
+    testModelDir: tensor_model/objectdetect/models/obdect_model/test/
+    model4DownloadBysocketPath: tensor_model/objectdetect/models/obdect_model/saved_model/saved_model_for_download_by_socket.pb

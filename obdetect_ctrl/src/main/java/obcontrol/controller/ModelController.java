@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.tensorflow.SavedModelBundle;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -59,9 +60,20 @@ public class ModelController {
         } else {
             return result;
         }
-
-
     }
+
+    @RequestMapping("/updateAllModelBySocket")
+    public String updateAllModelBySocket(){
+        rabbitmqHelper.send("all::updateBySocket::localhost:9001" );
+        return "已向所有节点发送更新模型命令,socket地址： localhost:9001";
+    }
+    @RequestMapping("/updateSingleModelBySocket")
+    public String updateSingleModelBySocket(@RequestParam String nodeName){
+        rabbitmqHelper.send(nodeName+"::updateBySocket::localhost:9001" );
+        return "已向"+nodeName+"发送更新模型命令,socket地址： localhost:9001";
+    }
+
+
 
     //在这里加锁，保证一次只有一个在下载和写文件，要是同时写文件，有文件锁
     private synchronized String testModelUrl(String modelURL) {
@@ -158,8 +170,8 @@ public class ModelController {
                 if (e.getMessage().equals("传输异常")) {
                     tryTimes++;
                     if(tryTimes==maxTryTime){
-                        //删除这次测试模型文件，以防下次测试时留存的模型文件过长导致末尾字节仍然留存
                         logger.info("网络传输或url有问题，已重复"+maxTryTime+"次，退出！");
+                        //删除这次测试模型文件，以防下次测试时留存的模型文件过长导致末尾字节仍然留存
                         File targetFile = new File(targetPath);
                         boolean deleted=targetFile.delete();
                         logger.info("删除下载的模型：" +deleted);

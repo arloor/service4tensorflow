@@ -20,14 +20,20 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import javax.rmi.CORBA.Util;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.io.IOException;
+import java.net.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.util.UUID;
+import java.util.zip.Adler32;
+import java.util.zip.Checksum;
 
 @Component
 public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
 
-    private final Logger logger=LoggerFactory.getLogger(RabbitmqHelper.class);
+    private Checksum checksum=new Adler32();
+
+    private final Logger logger = LoggerFactory.getLogger(RabbitmqHelper.class);
 
     @Autowired
     DetectService detectService;
@@ -41,27 +47,26 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
     private final AmqpAdmin amqpAdmin;
     private ConnectionFactory connectionFactory;
 
-    private static String FAOUT_EXCHANGE="ob-ctrl-faout";
+    private static String FAOUT_EXCHANGE = "ob-ctrl-faout";
 
-    private static String DIRECT_EXCHANGE="spring-boot-direct-key-ob";
+    private static String DIRECT_EXCHANGE = "spring-boot-direct-key-ob";
 
-    private static String ROUTINGKEY="ob";
+    private static String ROUTINGKEY = "ob";
 
     public static String QUEUE_NAME;
 
 
     private RabbitTemplate rabbitTemplate;
 
-    ObjectMapper ow=new ObjectMapper();
-
+    ObjectMapper ow = new ObjectMapper();
 
 
     @Autowired
-    public RabbitmqHelper(AmqpAdmin amqpAdmin, RabbitTemplate rabbitTemplate,ConnectionFactory connectionFactory) {
+    public RabbitmqHelper(AmqpAdmin amqpAdmin, RabbitTemplate rabbitTemplate, ConnectionFactory connectionFactory) {
         try {
             InetAddress ia = InetAddress.getLocalHost();
             this.host = ia.getHostName();//获取计算机主机名
-            this.IP= ia.getHostAddress();//获取计算机IP
+            this.IP = ia.getHostAddress();//获取计算机IP
 
         } catch (UnknownHostException e) {
             e.printStackTrace();
@@ -69,22 +74,21 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
 
         this.amqpAdmin = amqpAdmin;
         this.rabbitTemplate = rabbitTemplate;
-        this.connectionFactory=connectionFactory;
+        this.connectionFactory = connectionFactory;
         rabbitTemplate.setConfirmCallback(this); //rabbitTemplate如果为单例的话，那回调就是最后设置的内容
     }
 
     /**
      * 针对消费者配置
-     FanoutExchange: 将消息分发到所有的绑定队列，无routingkey的概念
-     HeadersExchange ：通过添加属性key-value匹配
-     DirectExchange:按照routingkey分发到指定队列
-     TopicExchange:多关键字匹配
+     * FanoutExchange: 将消息分发到所有的绑定队列，无routingkey的概念
+     * HeadersExchange ：通过添加属性key-value匹配
+     * DirectExchange:按照routingkey分发到指定队列
+     * TopicExchange:多关键字匹配
      */
 //    @Bean
 //    public DirectExchange directExchange() {
 //        return new DirectExchange(DIRECT_EXCHANGE);
 //    }
-
     @Bean
     public FanoutExchange fanoutExchange() {
         logger.info("注册Exchange");
@@ -92,11 +96,10 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
     }
 
 
-
     @Bean
     public Queue queue() {
-        QUEUE_NAME="ob-"+host+"-"+IP+"-"+port;
-        logger.info("注册 queue： "+QUEUE_NAME);
+        QUEUE_NAME = "ob-" + host + "-" + IP + "-" + port;
+        logger.info("注册 queue： " + QUEUE_NAME);
         return new Queue(QUEUE_NAME, false); //队列持久
 
     }
@@ -120,11 +123,11 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
             @Override
             public void onMessage(Message message, Channel channel) throws Exception {
                 byte[] body = message.getBody();
-                String queue_msg=new String(body);
-                String queueName=queue_msg.substring(0,queue_msg.indexOf("::"));
-                String msg=queue_msg.substring(queue_msg.indexOf("::")+2);
-                logger.info("收到消息   "+queue_msg);
-                processMeg(queueName,msg);
+                String queue_msg = new String(body);
+                String queueName = queue_msg.substring(0, queue_msg.indexOf("::"));
+                String msg = queue_msg.substring(queue_msg.indexOf("::") + 2);
+                logger.info("收到消息   " + queue_msg);
+                processMeg(queueName, msg);
 
                 channel.basicAck(message.getMessageProperties().getDeliveryTag(), false); //确认消息成功消费
             }
@@ -133,25 +136,93 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
                 //todo
 
                 //msg= "ob-"+host+"-"+IP+"-"+port+"::"+order
-                if(msg.startsWith(QUEUE_NAME)||msg.startsWith("all")){
-                    String order=msg.substring(msg.indexOf("::")+2);
+                if (msg.startsWith(QUEUE_NAME) || msg.startsWith("all")) {
+                    String order = msg.substring(msg.indexOf("::") + 2);
                     //order=status
-                    if(order.equals("status")){
+                    if (order.equals("status")) {
                         //获取本身状态，发送
-                        Status status=detectService.staus(staus(new Status()));
+                        Status status = detectService.staus(staus(new Status()));
                         status.setLastMsgTime(Utils.getFormedDate());
                         try {
-                            String tosendMsg=ow.writeValueAsString(status);
-                            tosendMsg=tosendMsg.replaceAll("\"","'");
-                            send("status::"+tosendMsg);
+                            String tosendMsg = ow.writeValueAsString(status);
+                            tosendMsg = tosendMsg.replaceAll("\"", "'");
+                            send("status::" + tosendMsg);
                         } catch (JsonProcessingException e) {
                             e.printStackTrace();
                         }
                     }
-                    //order=update::http://localhost:9000/saved_model.pb
-                    if(order.startsWith("update")){
-                        String updateURL=order.substring(order.indexOf("::")+2);
-                        logger.info("开始加载"+updateURL+"的模型");
+                    if (order.startsWith("updateBySocket")) {
+                        String socketAddr = order.substring(order.indexOf("::") + 2);
+                        logger.info("开始加载" + socketAddr + "的模型");
+                        //todo
+                        String host=socketAddr.split(":")[0];
+                        int port=Integer.parseInt(socketAddr.split(":")[1]);
+                        try {
+                            ByteBuffer buffer=ByteBuffer.allocate(6000);
+                            SocketChannel channel=SocketChannel.open(new InetSocketAddress(host,port));
+                            int total=0;
+                            String toSend;
+                            toSend="start\r\n";
+                            buffer.put(toSend.getBytes());
+                            buffer.flip();
+                            channel.write(buffer);
+                            buffer.clear();
+                            int readNum=channel.read(buffer);
+                            if(readNum>0){
+                                String length=new String(buffer.array());
+                                logger.info("模型文件大小: "+length);
+                                buffer.clear();
+                            }
+                            if(readNum==-1){
+                                logger.info(""+total);
+                                logger.info("结束");
+                                channel.close();
+                                return;
+                            }
+                            do{
+                                toSend=""+total+"-"+(total+3999)+"\r\n";
+                                buffer.put(toSend.getBytes());
+                                buffer.flip();
+                                channel.write(buffer);
+                                buffer.clear();
+                                int num=channel.read(buffer);
+//                                num+=channel.read(buffer);
+//                                num+=channel.read(buffer);
+                                if(num==-1){
+                                    logger.info(""+total);
+                                    logger.info("结束");
+                                    channel.close();
+                                    break;
+                                }else if(num>0){
+                                    byte[] bytes=buffer.array();
+                                    int headerEnd = -1;
+                                    for (int i = 0; i < num-3 ; i++) {
+                                        if (bytes[i] == 13 && bytes[i + 1] == 10 && bytes[i + 2] == 13 && bytes[i + 3] == 10) {
+                                            headerEnd = i;
+                                            break;
+                                        }
+                                    }
+                                    String headers=new String(bytes,0,headerEnd);
+                                    logger.info(headers);
+                                    num-=headerEnd;
+                                    num-=4;
+                                }
+                                buffer.clear();
+                                total+=num;
+
+                                try {
+                                    Thread.sleep(10);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }while (true);
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    } else if (order.startsWith("update")) {//order=update::http://localhost:9000/saved_model.pb
+                        String updateURL = order.substring(order.indexOf("::") + 2);
+                        logger.info("开始加载" + updateURL + "的模型");
                         detectService.updateModelFromURL(updateURL);
                     }
                 }
@@ -160,12 +231,13 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
         return container;
     }
 
-    public void send(String msg){
-        CorrelationData ID=new CorrelationData(UUID.randomUUID().toString());
-        rabbitTemplate.convertAndSend(DIRECT_EXCHANGE,ROUTINGKEY,QUEUE_NAME+"::"+msg,ID);
-        logger.info("发送消息:  "+msg +"，ID为： "+ID);
-        lastMegTime= Utils.getFormedDate();
-        }
+    public void send(String msg) {
+        CorrelationData ID = new CorrelationData(UUID.randomUUID().toString());
+        rabbitTemplate.convertAndSend(DIRECT_EXCHANGE, ROUTINGKEY, QUEUE_NAME + "::" + msg, ID);
+        logger.info("发送消息:  " + msg + "，ID为： " + ID);
+        lastMegTime = Utils.getFormedDate();
+    }
+
     /**
      * 回调
      */
@@ -178,7 +250,7 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
         }
     }
 
-    public Status staus(Status status){
+    public Status staus(Status status) {
         status.setIP(IP);
         status.setPort(port);
         status.setNodeName(QUEUE_NAME);
