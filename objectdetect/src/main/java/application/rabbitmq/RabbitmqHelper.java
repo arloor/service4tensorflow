@@ -151,76 +151,7 @@ public class RabbitmqHelper implements RabbitTemplate.ConfirmCallback {
                             e.printStackTrace();
                         }
                     }
-                    if (order.startsWith("updateBySocket")) {
-//                        String socketAddr = order.substring(order.indexOf("::") + 2);
-//                        logger.info("开始加载" + socketAddr + "的模型");
-//                        //todo
-//                        String host=socketAddr.split(":")[0];
-//                        int port=Integer.parseInt(socketAddr.split(":")[1]);
-//                        try {
-//                            ByteBuffer buffer=ByteBuffer.allocate(6000);
-//                            SocketChannel channel=SocketChannel.open(new InetSocketAddress(host,port));
-//                            int total=0;
-//                            String toSend;
-//                            toSend="start\r\n";
-//                            buffer.put(toSend.getBytes());
-//                            buffer.flip();
-//                            channel.write(buffer);
-//                            buffer.clear();
-//                            int readNum=channel.read(buffer);
-//                            if(readNum>0){
-//                                String length=new String(buffer.array());
-//                                logger.info("模型文件大小: "+length);
-//                                buffer.clear();
-//                            }
-//                            if(readNum==-1){
-//                                logger.info(""+total);
-//                                logger.info("结束");
-//                                channel.close();
-//                                return;
-//                            }
-//                            do{
-//                                toSend=""+total+"-"+(total+3999)+"\r\n";
-//                                buffer.put(toSend.getBytes());
-//                                buffer.flip();
-//                                channel.write(buffer);
-//                                buffer.clear();
-//                                int num=channel.read(buffer);
-////                                num+=channel.read(buffer);
-////                                num+=channel.read(buffer);
-//                                if(num==-1){
-//                                    logger.info(""+total);
-//                                    logger.info("结束");
-//                                    channel.close();
-//                                    break;
-//                                }else if(num>0){
-//                                    byte[] bytes=buffer.array();
-//                                    int headerEnd = -1;
-//                                    for (int i = 0; i < num-3 ; i++) {
-//                                        if (bytes[i] == 13 && bytes[i + 1] == 10 && bytes[i + 2] == 13 && bytes[i + 3] == 10) {
-//                                            headerEnd = i;
-//                                            break;
-//                                        }
-//                                    }
-//                                    String headers=new String(bytes,0,headerEnd);
-//                                    logger.info(headers);
-//                                    num-=headerEnd;
-//                                    num-=4;
-//                                }
-//                                buffer.clear();
-//                                total+=num;
-//
-//                                try {
-//                                    Thread.sleep(10);
-//                                } catch (InterruptedException e) {
-//                                    e.printStackTrace();
-//                                }
-//                            }while (true);
-//
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
-                    } else if (order.startsWith("update")) {//order=update::http://localhost:9000/saved_model.pb
+                    if (order.startsWith("update")) {//order=update::http://localhost:9000/saved_model.pb
                         String updateURL = order.substring(order.indexOf("::") + 2);
                         logger.info("开始加载" + updateURL + "的模型");
                         detectService.updateModelFromURL(updateURL);

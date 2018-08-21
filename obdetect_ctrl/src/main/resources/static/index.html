@@ -22,7 +22,7 @@
 
 <div id="button_area">
     <div class="input">
-        <button class="updateModelButton" onclick="update_all_models_by_socket()">通过SOCKET更新所有模型</button>
+        <!--<button class="updateModelButton" onclick="update_all_models_by_socket()">通过SOCKET更新所有模型</button>-->
         <button class="updateModelButton" onclick="update_all_models()">更新所有模型</button>
         <button onclick="for_all_status()">刷新所有节点</button>
         <button class="updateModelButton" onclick="get_all_status()">显示最新状态</button>
@@ -65,7 +65,7 @@
             </tr>
         </table>
         <div class="panel_input">
-            <button class="updateModelButton" v-on:click="update_single_models_by_socket(node.nodeName)">通过SOCKET更新所有模型</button>
+            <!--<button class="updateModelButton" v-on:click="update_single_models_by_socket(node.nodeName)">通过SOCKET更新所有模型</button>-->
             <button class="updateModelButton" v-on:click="update_single_model(node.nodeName)">更新节点模型</button>
         </div>
     </div>
