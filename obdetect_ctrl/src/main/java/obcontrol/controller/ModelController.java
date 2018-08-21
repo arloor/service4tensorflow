@@ -1,5 +1,8 @@
 package obcontrol.controller;
 
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 import obcontrol.rabbitmq.RabbitmqHelper;
 import org.apache.catalina.servlet4preview.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -11,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.tensorflow.SavedModelBundle;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -18,14 +22,21 @@ import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.RandomAccess;
+import java.util.Map;
+import java.util.zip.Adler32;
+import java.util.zip.Checksum;
 
 @RestController
 @RequestMapping("/model")
 public class ModelController {
+    private OkHttpClient client = new OkHttpClient();
+    private int pianLength=3145728;
+
     @Value("${filepath.relative.testModelDir}")
     private String testModelDir;
+
+    @Value("${filepath.relative.toDownloadModelFile}")
+    private String toDownloadModelFile;
 
     private static Logger logger = LoggerFactory.getLogger(ModelController.class);
 
@@ -59,37 +70,49 @@ public class ModelController {
         } else {
             return result;
         }
+    }
 
-
+    @RequestMapping("/modelfile")
+    public  byte[] model(HttpServletRequest request, HttpServletResponse response){
+        Adler32 checksum=new Adler32();
+        try(RandomAccessFile model=new RandomAccessFile(toDownloadModelFile,"r")){
+            byte[] result=new byte[pianLength];
+            long length=model.length();
+            String range=request.getHeader("Range");
+            if(range!=null){
+                //bytes=0-20971519
+                String temp=range.split("=")[1];
+                long start=Long.parseLong(temp.split("-")[0]);
+                long end=Long.parseLong(temp.split("-")[1]);
+                model.seek(start);
+                int n=0;
+                do {
+                    int readNum=model.read(result);
+                    if(readNum==-1){
+                        break;
+                    }
+                    n+=readNum;
+                }while (n<end-start+1);
+                end=start+n-1;
+                checksum.update(result);
+                String checksumStr=String.valueOf(checksum.getValue());
+                response.setHeader("Last-Modified",checksumStr);
+                response.setHeader("Content-Range","bytes "+start+"-"+end+"/"+length);
+                return result;
+            }else{
+                response.sendError(403);
+                return null;
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     //在这里加锁，保证一次只有一个在下载和写文件，要是同时写文件，有文件锁
     private synchronized String testModelUrl(String modelURL) {
-//        //无断点续传功能版本
-//        logger.info("开始检测url及模型的有效性");
-//        String targetPath=testModelDir +"/saved_model.pb";
-//        //测试输入的url文件是否有效,是否能够下载
-//        try(InputStream is=new URL(modelURL).openStream()) {
-//            URL url=new URL(modelURL);
-//
-//            Path target = Paths.get(targetPath);
-//            Files.createDirectories(target.getParent());
-////            System.out.println(targetPath);
-//
-//            Files.copy(is, target,StandardCopyOption.REPLACE_EXISTING);
-//        } catch (MalformedURLException e) {
-//            e.printStackTrace();
-//            return "模型地址URL不正确 "+e.getMessage();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            return "模型地址URL无效 "+e.getMessage();
-//        }catch (IllegalArgumentException e){
-//            e.printStackTrace();
-//            return "模型地址URL无效 "+e.getMessage();
-//        }catch (Exception e){
-//            return "模型地址URL无效 "+e.getMessage();
-//        }
-
         logger.info("开始检测url及模型的有效性");
         String targetPath = testModelDir + "/saved_model.pb";
         RandomAccessFile oSavedFile = null;
@@ -112,8 +135,10 @@ public class ModelController {
                 URLConnection connection = url.openConnection();
                 Path target = Paths.get(targetPath);
                 Files.createDirectories(target.getParent());
-                //每次下载20m
-                connection.setRequestProperty("Range", "bytes=" + total + "-" + (total + 20971519));
+                //每次下载5m
+                connection.setRequestProperty("Range", "bytes=" + total + "-" + (total + pianLength));
+
+
 
                 try (InputStream is = connection.getInputStream()) {
                     String contentRange = connection.getHeaderField("Content-Range");
@@ -122,6 +147,8 @@ public class ModelController {
                     int bytesNum = Integer.parseInt(contentRange.substring(contentRange.indexOf("/") + 1));
                     byte[] b = new byte[8096];
                     int nRead;
+                    logger.info("Content-MD5: ",connection.getHeaderField("Content-MD5"));
+                    logger.info("Last-Modified: ",connection.getHeaderField("Last-Modified"));
                     oSavedFile.seek(total);
                     int num = 0;
                     while ((nRead = is.read(b, 0, 8096)) > 0) {
@@ -189,11 +216,7 @@ public class ModelController {
         return modelURL;
     }
 
-    public String getModelURL() {
-        return modelURL;
-    }
-
-    public void setModelURL(String modelURL) {
+    private void setModelURL(String modelURL) {
         this.modelURL = modelURL;
     }
 }

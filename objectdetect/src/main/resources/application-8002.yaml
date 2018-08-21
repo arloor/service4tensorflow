@@ -19,9 +19,9 @@ management:
 filepath:
   relative:
     modelDir:
-      tensor_model/objectdetect/models/obdect_model/saved_model
+      tensor_model/objectdetect/models/saved_model
     modelDownloadDir:
-      tensor_model/objectdetect/models/obdect_model/download/saved_model
+      tensor_model/objectdetect/models/${server.port}/saved_model
     labels:
       tensor_model/objectdetect/labels/mscoco_label_map.pbtxt
 

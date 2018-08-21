@@ -18,12 +18,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.imageio.ImageIO;
+
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +44,9 @@ import org.tensorflow.types.UInt8;
 
 @Component
 public class DetectService {
+
+
+    private int pianLength=3145728;
     private static Logger logger = LoggerFactory.getLogger(DetectService.class);
 
     private static ReentrantReadWriteLock rwl = new ReentrantReadWriteLock();
@@ -305,7 +308,7 @@ public class DetectService {
             return;
         }
 
-        //断点续传版本  不支持对象存储的http链接
+        //断点续传版本
         logger.info("开始检测url及模型的有效性");
         String targetPath = modelDownloadDir + "/saved_model.pb";
         RandomAccessFile oSavedFile = null;
@@ -329,12 +332,15 @@ public class DetectService {
                 URLConnection connection = url.openConnection();
                 Path target = Paths.get(targetPath);
                 Files.createDirectories(target.getParent());
-                //每次下载20m
-                connection.setRequestProperty("Range", "bytes=" + total + "-" + (total + 20971519));
+                //每次下载3m
+                connection.setRequestProperty("Range", "bytes=" + total + "-" + (total + pianLength));
 
                 try (InputStream is = connection.getInputStream()) {
                     String contentRange = connection.getHeaderField("Content-Range");
                     logger.info("下载分片： " + contentRange);
+                    logger.info("Content-MD5: ",connection.getHeaderField("Content-MD5"));
+                    Map<String, List<String>> headers=connection.getHeaderFields();
+
                     //byteSum是文件的字节长度，通过它与total（下载总数）比较判断是否下载完毕。
                     int bytesNum = Integer.parseInt(contentRange.substring(contentRange.indexOf("/") + 1));
                     byte[] b = new byte[8096];

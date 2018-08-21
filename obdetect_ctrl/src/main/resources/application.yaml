@@ -22,3 +22,5 @@ filepath:
   relative:
     testModelDir:
       tensor_model/objectdetect/models/obdect_model/test/saved_model
+    toDownloadModelFile:
+      tensor_model/objectdetect/models/toDownloadModel/saved_model.pb
