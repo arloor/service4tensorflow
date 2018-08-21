@@ -21,13 +21,14 @@ import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
 import java.util.zip.Adler32;
+import java.util.zip.CRC32;
 
 @RestController
 @RequestMapping("/model")
 public class ModelController {
     private int pianLength=3145728;
+//    private int pianLength=8096;
 
     @Value("${filepath.relative.testModelDir}")
     private String testModelDir;
@@ -71,7 +72,7 @@ public class ModelController {
 
     @RequestMapping("/modelfile")
     public  byte[] model(HttpServletRequest request, HttpServletResponse response){
-        Adler32 checksum=new Adler32();
+        CRC32 checksumTool=new CRC32();
         try(RandomAccessFile model=new RandomAccessFile(toDownloadModelFile,"r")){
             byte[] readBytes=new byte[pianLength];
             long length=model.length();
@@ -91,8 +92,16 @@ public class ModelController {
                     n+=readNum;
                 }while (n<end-start+1);
                 end=start+n-1;
-                checksum.update(readBytes);
-                String checksumStr=String.valueOf(checksum.getValue());
+
+                //todo：校验算法。。
+                int sumcheck=0;
+                for (int i = 0; i < 3000; i++) {
+                    sumcheck+=(int)(readBytes[i*1000]);
+                }
+//                System.out.println(sumcheck);
+
+                checksumTool.update(readBytes);
+                String checksumStr=String.valueOf(sumcheck);
                 logger.info("Content-Range: "+"bytes "+start+"-"+end+"/"+length+"  Set-Cookie: checksum="+checksumStr);
                 response.addCookie(new Cookie("checksum",checksumStr));
                 response.setHeader("Content-Range","bytes "+start+"-"+end+"/"+length);
@@ -132,7 +141,7 @@ public class ModelController {
         int total = 0;
         int tryTimes=0;
         final int maxTryTime=5;
-        Adler32 adler32=new Adler32();
+        CRC32 checksumTool=new CRC32();
         while (true) {
             //测试输入的url文件是否有效,是否能够下载
             try {
@@ -155,14 +164,24 @@ public class ModelController {
                     //byteSum是文件的字节长度，通过它与total（下载总数）比较判断是否下载完毕。
                     int bytesNum = Integer.parseInt(contentRange.substring(contentRange.indexOf("/") + 1));
                     byte[] b = new byte[pianLength];
-                    int nRead;
+                    int nRead=0;
+                    int n=0;
                     oSavedFile.seek(total);
-                    while ((nRead = is.read(b, 0, 8096)) > 0) {
-                        oSavedFile.write(b, 0, nRead);
-                        total += nRead;
+                    while ((nRead = is.read(b, n, (int)(end-start+1-n))) > 0) {
+                        n+=nRead;
                     }
+                    checksumTool.update(b);
+                    //todo：校验算法。。
+                    int sumcheck=0;
+                    for (int i = 0; i < 3000; i++) {
+                        sumcheck+=(int)(b[i*1000]);
+                    }
+//                    System.out.println(sumcheck);
 
-                    logger.info("下载分片： " + contentRange+" 已读: "+((double)total/1048576)+"M checksum: "+checkSum+" "+adler32.getValue());
+                    oSavedFile.write(b, 0, n);
+                    total += n;
+
+                    logger.info("下载分片： " + contentRange+" 已读: "+((double)total/1048576)+"M checksum: "+(checkSum==null?"无":checkSum)+" ?= "+sumcheck);
 
                     if (total == bytesNum) {
                         logger.info("下载结束，共" + total + "字节");

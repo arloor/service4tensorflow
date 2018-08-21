@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.zip.Adler32;
 import javax.imageio.ImageIO;
 
 
@@ -325,6 +326,7 @@ public class DetectService {
         int total = 0;
         int tryTimes=0;
         final int maxTryTime=5;
+        Adler32 adler32=new Adler32();
         while (true) {
             //测试输入的url文件是否有效,是否能够下载
             try {
@@ -332,29 +334,43 @@ public class DetectService {
                 URLConnection connection = url.openConnection();
                 Path target = Paths.get(targetPath);
                 Files.createDirectories(target.getParent());
-                //每次下载3m
+                //每次下载5m
                 connection.setRequestProperty("Range", "bytes=" + total + "-" + (total + pianLength-1));
 
                 try (InputStream is = connection.getInputStream()) {
                     String contentRange = connection.getHeaderField("Content-Range");
+                    long start=Long.parseLong(contentRange.substring(contentRange.indexOf(" ")+1,contentRange.indexOf("-")));
+                    long end=Long.parseLong(contentRange.substring(contentRange.indexOf("-")+1,contentRange.indexOf("/")));
                     String setCookie = connection.getHeaderField("Set-Cookie");
                     String checkSum=null;
                     if(setCookie!=null){
                         checkSum=setCookie.split("=")[1];
-                        if(true){
-                            System.out.print("");
-                        }
                     }
                     //byteSum是文件的字节长度，通过它与total（下载总数）比较判断是否下载完毕。
                     int bytesNum = Integer.parseInt(contentRange.substring(contentRange.indexOf("/") + 1));
-                    byte[] b = new byte[8096];
-                    int nRead;
+                    byte[] b = new byte[pianLength];
+                    int nRead=0;
+                    int n=0;
                     oSavedFile.seek(total);
-                    while ((nRead = is.read(b, 0, 8096)) > 0) {
-                        oSavedFile.write(b, 0, nRead);
-                        total += nRead;
+                    while ((nRead = is.read(b, n, (int)(end-start+1-n))) > 0) {
+                        n+=nRead;
                     }
-                    logger.info("下载分片： " + contentRange+" 已读: "+((double)total/1048576)+"M checksum: "+checkSum);
+                    adler32.update(b);
+                    //todo：校验算法。。
+                    int sumcheck=0;
+                    for (int i = 0; i < 3000; i++) {
+                        sumcheck+=(int)(b[i*1000]);
+                    }
+                    if(checkSum!=null){
+                        if(checkSum.equals(String.valueOf(sumcheck))){
+                            oSavedFile.write(b, 0, n);
+                            total += n;
+                        }
+                    }else {
+                        oSavedFile.write(b, 0, n);
+                        total += n;
+                    }
+                    logger.info("下载分片： " + contentRange+" 已读: "+((double)total/1048576)+"M checksum: "+(checkSum==null?"无":checkSum)+" ?= "+sumcheck);
 
                     if (total == bytesNum) {
                         logger.info("下载结束，共" + total + "字节");
@@ -367,34 +383,6 @@ public class DetectService {
                     logger.info(e.getMessage());
                     throw new Exception("传输异常");
                 }
-
-//                try (InputStream is = connection.getInputStream()) {
-//                    String contentRange = connection.getHeaderField("Content-Range");
-//                    logger.info("下载分片： " + contentRange);
-//                    logger.info("Content-MD5: ",connection.getHeaderField("Content-MD5"));
-//                    Map<String, List<String>> headers=connection.getHeaderFields();
-//
-//                    //byteSum是文件的字节长度，通过它与total（下载总数）比较判断是否下载完毕。
-//                    int bytesNum = Integer.parseInt(contentRange.substring(contentRange.indexOf("/") + 1));
-//                    byte[] b = new byte[8096];
-//                    int nRead;
-//                    oSavedFile.seek(total);
-//                    while ((nRead = is.read(b, 0, 8096)) > 0) {
-//                        oSavedFile.write(b, 0, nRead);
-//                        total += nRead;
-//                    }
-//
-//                    if (total == bytesNum) {
-//                        logger.info("下载结束，共" + total + "字节");
-//                        oSavedFile.close();
-//                        break;
-//                    }
-//
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                    System.out.println(e.getMessage());
-//                    throw new Exception("传输异常");
-//                }
             } catch (MalformedURLException e) {
                 e.printStackTrace();
                 System.out.println( "模型地址URL不正确 " + e.getMessage());
