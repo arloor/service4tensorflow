@@ -333,14 +333,18 @@ public class DetectService {
                 Path target = Paths.get(targetPath);
                 Files.createDirectories(target.getParent());
                 //每次下载3m
-                connection.setRequestProperty("Range", "bytes=" + total + "-" + (total + pianLength));
+                connection.setRequestProperty("Range", "bytes=" + total + "-" + (total + pianLength-1));
 
                 try (InputStream is = connection.getInputStream()) {
                     String contentRange = connection.getHeaderField("Content-Range");
-                    logger.info("下载分片： " + contentRange);
-                    logger.info("Content-MD5: ",connection.getHeaderField("Content-MD5"));
-                    Map<String, List<String>> headers=connection.getHeaderFields();
-
+                    String setCookie = connection.getHeaderField("Set-Cookie");
+                    String checkSum=null;
+                    if(setCookie!=null){
+                        checkSum=setCookie.split("=")[1];
+                        if(true){
+                            System.out.print("");
+                        }
+                    }
                     //byteSum是文件的字节长度，通过它与total（下载总数）比较判断是否下载完毕。
                     int bytesNum = Integer.parseInt(contentRange.substring(contentRange.indexOf("/") + 1));
                     byte[] b = new byte[8096];
@@ -350,6 +354,7 @@ public class DetectService {
                         oSavedFile.write(b, 0, nRead);
                         total += nRead;
                     }
+                    logger.info("下载分片： " + contentRange+" 已读: "+((double)total/1048576)+"M checksum: "+checkSum);
 
                     if (total == bytesNum) {
                         logger.info("下载结束，共" + total + "字节");
@@ -359,9 +364,37 @@ public class DetectService {
 
                 } catch (Exception e) {
                     e.printStackTrace();
-                    System.out.println(e.getMessage());
+                    logger.info(e.getMessage());
                     throw new Exception("传输异常");
                 }
+
+//                try (InputStream is = connection.getInputStream()) {
+//                    String contentRange = connection.getHeaderField("Content-Range");
+//                    logger.info("下载分片： " + contentRange);
+//                    logger.info("Content-MD5: ",connection.getHeaderField("Content-MD5"));
+//                    Map<String, List<String>> headers=connection.getHeaderFields();
+//
+//                    //byteSum是文件的字节长度，通过它与total（下载总数）比较判断是否下载完毕。
+//                    int bytesNum = Integer.parseInt(contentRange.substring(contentRange.indexOf("/") + 1));
+//                    byte[] b = new byte[8096];
+//                    int nRead;
+//                    oSavedFile.seek(total);
+//                    while ((nRead = is.read(b, 0, 8096)) > 0) {
+//                        oSavedFile.write(b, 0, nRead);
+//                        total += nRead;
+//                    }
+//
+//                    if (total == bytesNum) {
+//                        logger.info("下载结束，共" + total + "字节");
+//                        oSavedFile.close();
+//                        break;
+//                    }
+//
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                    System.out.println(e.getMessage());
+//                    throw new Exception("传输异常");
+//                }
             } catch (MalformedURLException e) {
                 e.printStackTrace();
                 System.out.println( "模型地址URL不正确 " + e.getMessage());

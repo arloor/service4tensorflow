@@ -1,8 +1,6 @@
 package obcontrol.controller;
 
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
+
 import obcontrol.rabbitmq.RabbitmqHelper;
 import org.apache.catalina.servlet4preview.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -14,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.tensorflow.SavedModelBundle;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 import java.net.MalformedURLException;
@@ -24,12 +23,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.zip.Adler32;
-import java.util.zip.Checksum;
 
 @RestController
 @RequestMapping("/model")
 public class ModelController {
-    private OkHttpClient client = new OkHttpClient();
     private int pianLength=3145728;
 
     @Value("${filepath.relative.testModelDir}")
@@ -40,7 +37,7 @@ public class ModelController {
 
     private static Logger logger = LoggerFactory.getLogger(ModelController.class);
 
-    private String modelURL = "https://api.moontell.cn:9000/saved_model.pb";
+    private String modelURL = "https://api.moontell.cn:9000/model/modelfile";
 
     @Autowired
     RabbitmqHelper rabbitmqHelper;
@@ -76,7 +73,7 @@ public class ModelController {
     public  byte[] model(HttpServletRequest request, HttpServletResponse response){
         Adler32 checksum=new Adler32();
         try(RandomAccessFile model=new RandomAccessFile(toDownloadModelFile,"r")){
-            byte[] result=new byte[pianLength];
+            byte[] readBytes=new byte[pianLength];
             long length=model.length();
             String range=request.getHeader("Range");
             if(range!=null){
@@ -87,20 +84,27 @@ public class ModelController {
                 model.seek(start);
                 int n=0;
                 do {
-                    int readNum=model.read(result);
+                    int readNum=model.read(readBytes,n,(int)(end-start+1-n));
                     if(readNum==-1){
                         break;
                     }
                     n+=readNum;
                 }while (n<end-start+1);
                 end=start+n-1;
-                checksum.update(result);
+                checksum.update(readBytes);
                 String checksumStr=String.valueOf(checksum.getValue());
-                response.setHeader("Last-Modified",checksumStr);
+                logger.info("Content-Range: "+"bytes "+start+"-"+end+"/"+length+"  Set-Cookie: checksum="+checksumStr);
+                response.addCookie(new Cookie("checksum",checksumStr));
                 response.setHeader("Content-Range","bytes "+start+"-"+end+"/"+length);
-                return result;
+                if(n==pianLength){
+                    return readBytes;
+                }else{
+                    byte[] result=new byte[n];
+                    System.arraycopy(readBytes,0,result,0,n);
+                    return result;
+                }
             }else{
-                response.sendError(403);
+                response.sendError(400);
                 return null;
             }
         } catch (FileNotFoundException e) {
@@ -128,6 +132,7 @@ public class ModelController {
         int total = 0;
         int tryTimes=0;
         final int maxTryTime=5;
+        Adler32 adler32=new Adler32();
         while (true) {
             //测试输入的url文件是否有效,是否能够下载
             try {
@@ -136,30 +141,28 @@ public class ModelController {
                 Path target = Paths.get(targetPath);
                 Files.createDirectories(target.getParent());
                 //每次下载5m
-                connection.setRequestProperty("Range", "bytes=" + total + "-" + (total + pianLength));
-
-
+                connection.setRequestProperty("Range", "bytes=" + total + "-" + (total + pianLength-1));
 
                 try (InputStream is = connection.getInputStream()) {
                     String contentRange = connection.getHeaderField("Content-Range");
-                    logger.info("下载分片： " + contentRange);
+                    long start=Long.parseLong(contentRange.substring(contentRange.indexOf(" ")+1,contentRange.indexOf("-")));
+                    long end=Long.parseLong(contentRange.substring(contentRange.indexOf("-")+1,contentRange.indexOf("/")));
+                    String setCookie = connection.getHeaderField("Set-Cookie");
+                    String checkSum=null;
+                    if(setCookie!=null){
+                        checkSum=setCookie.split("=")[1];
+                    }
                     //byteSum是文件的字节长度，通过它与total（下载总数）比较判断是否下载完毕。
                     int bytesNum = Integer.parseInt(contentRange.substring(contentRange.indexOf("/") + 1));
-                    byte[] b = new byte[8096];
+                    byte[] b = new byte[pianLength];
                     int nRead;
-                    logger.info("Content-MD5: ",connection.getHeaderField("Content-MD5"));
-                    logger.info("Last-Modified: ",connection.getHeaderField("Last-Modified"));
                     oSavedFile.seek(total);
-                    int num = 0;
                     while ((nRead = is.read(b, 0, 8096)) > 0) {
                         oSavedFile.write(b, 0, nRead);
                         total += nRead;
-                        num++;
-//                        //手动抛出异常，模拟下载时出错，激发断点续传
-//                        if (num == 2469) {
-//                            throw new Exception("手动异常，激发断点续传。 已下载字节数： " + total);
-//                        }
                     }
+
+                    logger.info("下载分片： " + contentRange+" 已读: "+((double)total/1048576)+"M checksum: "+checkSum+" "+adler32.getValue());
 
                     if (total == bytesNum) {
                         logger.info("下载结束，共" + total + "字节");
